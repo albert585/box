@@ -16,6 +16,7 @@
 #include "lib/button.h"
 #include "lib/settings.h"
 #include "lib/player.h"
+#include "lib/test_button.h"
 #include "main.h"
 
 #define PATH_MAX_LENGTH 256
@@ -52,9 +53,7 @@ static void lv_linux_disp_init(void)
     const char *device = getenv_default("LV_LINUX_FBDEV_DEVICE", "/dev/fb0");
     disp= lv_linux_fbdev_create();
     lv_linux_fbdev_set_file(disp, device);
-    lv_display_set_resolution(disp,240, 960);
-    lv_display_set_offset(disp,0,120);
-    lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_90);
+    lv_display_set_resolution(disp,640,480);
 
 }
 
@@ -62,10 +61,10 @@ static void lv_linux_disp_init(void)
 
 static void lv_linux_touch_init(void)
 {
-    lv_indev_t *touch =lv_evdev_create(LV_INDEV_TYPE_POINTER, "/dev/input/event0");
+    lv_indev_t *touch =lv_evdev_create(LV_INDEV_TYPE_POINTER, "/dev/input/event6");
     lv_indev_set_display(touch, disp);
-    lv_evdev_set_calibration(touch, 20, 860, 220, -120);
-    lv_evdev_set_swap_axes(touch,false);
+    //lv_evdev_set_calibration(touch, 20, 860, 220, -120);
+    //lv_evdev_set_swap_axes(touch,false);
 }
 
 void readKeyHome(void) {
@@ -255,7 +254,7 @@ int main(int argc, char *argv[])
         }
     }
 
-  powerd = open("/dev/input/event1", O_RDWR);
+  powerd = open("/dev/input/event0", O_RDWR);
   fcntl(powerd, 4,2048);
   homed = open("/dev/input/event2", O_RDWR);
   fcntl(homed, 4,2048);
@@ -281,6 +280,7 @@ int main(int argc, char *argv[])
 
   create_container();
   button();
+  create_test_button();
   //lv_demo_widgets();
 
   while(1) {

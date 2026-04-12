@@ -1,11 +1,11 @@
 #include "audio.h"
+#include "player.h"
 #include <string.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include "./file_manager.h"
 #include "./container.h"
 #include "./events.h"
-#include "./player.h"
 
 lv_obj_t *manager = NULL;
 static lv_obj_t *file_list = NULL;
@@ -16,20 +16,20 @@ static char current_path[PATH_MAX] = "/mnt/app";
 static const char *convert_lvgl_path(const char *lvgl_path)
 {
     static char real_path[PATH_MAX];
-    
+
     if (!lvgl_path) {
         return NULL;
     }
-    
-    // 检查是否是 A:/ 开头的路径
-    if (strncmp(lvgl_path, "A:/", 3) == 0) {
-        // 去掉 A:/ 前缀，直接使用后面的路径
+
+    // 检查是否是盘符开头的路径（如 A:/, B:/, C:/ 等）
+    if (strlen(lvgl_path) >= 2 && lvgl_path[1] == ':') {
+        // 去掉盘符前缀，直接使用后面的路径
         snprintf(real_path, sizeof(real_path), "%s", lvgl_path + 2);
     } else {
-        // 不是 A:/ 路径，直接使用
+        // 不是盘符路径，直接使用
         snprintf(real_path, sizeof(real_path), "%s", lvgl_path);
     }
-    
+
     return real_path;
 }
 
@@ -38,7 +38,7 @@ static const char *convert_lvgl_path(const char *lvgl_path)
 void file_manager(void) {
 
     manager = lv_obj_create(lv_screen_active());
-    lv_obj_set_size(manager, 960, 540);
+    lv_obj_set_size(manager, 960, 240);
     lv_obj_set_pos(manager, 0, 0);
     lv_obj_set_style_border_width(manager, 0, 0);
     lv_obj_add_event_cb(manager,event_close_manager,LV_EVENT_CLICKED,manager);
@@ -87,8 +87,8 @@ static bool is_end_with(const char * str1, const char * str2)
     return true;
 }
 
-// 音乐播放器函数：根据文件路径创建或更新播放器
-void music_player(const char * path)
+// 音视频播放器函数：根据文件路径创建或更新播放器
+void media_player(const char * path)
 {
     if (!path) return;
 
@@ -106,27 +106,39 @@ void music_player(const char * path)
         is_end_with(real_path, ".ogg") ||
         is_end_with(real_path, ".m4a")) {
 
-        printf("[file_manager] Audio file detected, creating player...\n");
+        printf("[file_manager] Audio file detected, creating audio player...\n");
 
         // 关闭文件管理器
         event_close_manager(NULL);
 
-        // 如果当前没有播放器，创建一个新的
-        if (current_player == NULL) {
-            printf("[file_manager] Creating new player instance\n");
-            current_player = player_create(parent);  // 使用 parent 容器
-            if (!current_player) {
-                printf("[file_manager] Failed to create player\n");
-                return;
-            }
-        }
+        // 创建音频播放页面
+        page_audio((char *)real_path);
 
-        // 设置音频文件并自动播放
-        player_set_file(current_player, real_path);
-        player_toggle_play_pause(current_player);
+        printf("[file_manager] Audio player started successfully\n");
+    }
+    // 检查是否是视频文件
+    else if (is_end_with(real_path, ".mp4") ||
+             is_end_with(real_path, ".avi") ||
+             is_end_with(real_path, ".mkv") ||
+             is_end_with(real_path, ".mov") ||
+             is_end_with(real_path, ".flv") ||
+             is_end_with(real_path, ".wmv") ||
+             is_end_with(real_path, ".webm")) {
 
-        printf("[file_manager] Player started successfully\n");
+        printf("[file_manager] Video file detected, creating video player...\n");
+
+        // 关闭文件管理器
+        event_close_manager(NULL);
+
+        // 创建视频播放页面（使用硬件解码）
+#ifdef USE_EYEESEE_MPP
+        page_video_hw((char *)real_path);
+#else
+        page_video((char *)real_path);
+#endif
+
+        printf("[file_manager] Video player started successfully\n");
     } else {
-        printf("[file_manager] Not an audio file: %s\n", real_path);
+        printf("[file_manager] Not a supported media file: %s\n", real_path);
     }
 }
