@@ -1,0 +1,9 @@
+# .clangd
+CompileFlags:
+  Add:
+    # 添加项目内部的 include 文件夹
+    - "-I."
+    - "-Isrc"
+    - "-Isrc/lib"
+    - "-Isrc/lib/views"
+    # 指定 C++ 标准，以避免额外报错
