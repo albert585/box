@@ -14,7 +14,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE=./user_cross_compile_setup.cmake -DCMAKE_BUILD_TYPE
 make -C build -j$(nproc)
 ```
 
-- **Toolchain path**: `/usr/arm-unknown-linux-musleabihf/` (configurable via `-DTOOLCHAIN_PREFIX=...`)
+- **Toolchain path**: `/usr/x-tools/arm-unknown-linux-musleabihf/` (configurable via `-DTOOLCHAIN_PREFIX=...`)
 - **Output binary**: `build/bin/lvglsim`
 - **Post-build strip**: skips in Debug mode. Release builds strip `--strip-unneeded`.
 - **Clean rebuild**: `make -C build clean && make -C build -j$(nproc)`
@@ -31,14 +31,14 @@ make -C build -j$(nproc)
 ## Architecture
 
 - **Entry point**: `src/main.c` — LVGL init, framebuffer display, evdev input, main loop, power management
-- **Module lib**: `src/lib/` — compiled into `lvgl_linux` static library, then linked to `lvglsim`
+- **Module lib**: `src/lib/` — compiled into `lvgl_linux` shared library, then linked to `lvglsim`
 - **Event routing**: `src/lib/events.c` — module transition dispatch (video playback lifecycle)
 - **Container system**: `src/lib/container.c` — main screen layout; `parent` is the global container object
 - `src/main.h` — exports for power/sleep/display functions used by lib modules
 
 ### Source auto-discovery
 
-`CMakeLists.txt` uses `file(GLOB ... CONFIGURE_DEPENDS)` on `src/lib/*.c` and `src/lib/virsual_novel/*.c`. New `.c` files dropped in these dirs are picked up automatically.
+`CMakeLists.txt` uses `file(GLOB ...)` on `src/lib/*.c` and `src/lib/views/*.c`. New `.c` files dropped in these dirs are picked up automatically.
 
 ### Key modules
 
@@ -47,9 +47,7 @@ make -C build -j$(nproc)
 | audio + audio_ctrl | `audio.c/h`, `audio_ctrl.c/h` | FFmpeg→ALSA PCM playback, hardware volume via ALSA Mixer |
 | ff_player | `ff_player.c/h` | FFmpeg-based A/V player (software decode) |
 | player | `player.c/h` | UI wrapper around ff_player (video/audio playback) |
-| lua | `lua/` | Lua 5.4 embedded scripting engine (static lib) |
-| virsual_novel | `virsual_novel/` | Visual novel engine with Lua scripting |
-| lv_lib_100ask | `lv_lib_100ask/` | Third-party LVGL widget library |
+| views | `views/` | Custom LVGL widgets (e.g. `lv_text_clock`) |
 
 ## Hardware / Board specifics
 
@@ -65,6 +63,7 @@ Binary runs **only** on the V833 (Tina Linux). Device nodes hardcoded in `src/ma
 
 - Power management: shallow sleep (LCD/touch off), 60s auto deep sleep (CPU powersave governor)
 - Touch calibration is commented out in `main.c` — may need re-enabling per device
+- Two tick functions: `custom_tick_get()` (uint64_t internal, used for keys/timeouts) and `tick_get()` (uint32_t internal, used for deep sleep timer)
 
 ## Dependencies (cross-compile sysroot)
 
@@ -80,6 +79,8 @@ libs/
 ```
 
 Override with `-DSYSROOT=/custom/path`.
+
+- Compiler flags include `-mfpu=neon` for ARM NEON SIMD
 
 ## LVGL
 

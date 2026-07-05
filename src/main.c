@@ -11,10 +11,8 @@
 #include <string.h>
 #include "lvgl/lvgl.h"
 #include "lvgl/src/drivers/display/fb/lv_linux_fbdev.h"
-#include "lib/file_manager.h"
 #include "lib/container.h"
 #include "lib/button.h"
-#include "lib/settings.h"
 #include "lib/player.h"
 #include "main.h"
 
@@ -52,9 +50,7 @@ static void lv_linux_disp_init(void)
     const char *device = getenv_default("LV_LINUX_FBDEV_DEVICE", "/dev/fb0");
     disp= lv_linux_fbdev_create();
     lv_linux_fbdev_set_file(disp, device);
-    lv_display_set_resolution(disp,240, 960);
-    lv_display_set_offset(disp,0,120);
-    lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_90);
+    lv_display_set_resolution(disp,640,480);
 
 }
 
@@ -62,10 +58,10 @@ static void lv_linux_disp_init(void)
 
 static void lv_linux_touch_init(void)
 {
-    lv_indev_t *touch =lv_evdev_create(LV_INDEV_TYPE_POINTER, "/dev/input/event0");
+    lv_indev_t *touch =lv_evdev_create(LV_INDEV_TYPE_POINTER, "/dev/input/event6");
     lv_indev_set_display(touch, disp);
-    lv_evdev_set_calibration(touch, 20, 860, 220, -120);
-    lv_evdev_set_swap_axes(touch,false);
+    //lv_evdev_set_calibration(touch, 20, 860, 220, -120);
+    //lv_evdev_set_swap_axes(touch,false);
 }
 
 void readKeyHome(void) {
@@ -117,15 +113,6 @@ void switchBackground(void){
     backgroundTs = custom_tick_get();
     sleepTs    = -1;
 }
-void switchForeground(void)
-{
-    if(backgroundTs == -1) return;
-
-    chdir(homepath);
-    system("chmod 777 switch_foreground");
-    system("sh ./switch_foreground &");
-    //sleep(114514);
-}
 
 void switchRobot(){
     switchBackground();
@@ -136,6 +123,17 @@ void switchRobot(){
     close(powerd);
     system("switch_robot");
 }
+void switchForeground(void)
+{
+    if(backgroundTs == -1) return;
+
+    chdir(homepath);
+    system("chmod 777 switch_foreground");
+    system("sh ./switch_foreground &");
+    //sleep(114514);
+}
+
+
 
 void lcdRefresh(void) {
     int buffer[8] = {0};
@@ -235,8 +233,8 @@ void setDontDeepSleep(bool b){
 int main(int argc, char *argv[])
 {
   bool isDaemonMode = false;
-  system("killall  robotd");
-  system("killall -SIGSTOP robot_run_1");
+  system("killall dlamInit");
+  system("killall ST03_app");
     for (uint32_t i = 0; i < argc; i++)
     {
         char * arg = argv[i];
@@ -255,7 +253,7 @@ int main(int argc, char *argv[])
         }
     }
 
-  powerd = open("/dev/input/event1", O_RDWR);
+  powerd = open("/dev/input/event0", O_RDWR);
   fcntl(powerd, 4,2048);
   homed = open("/dev/input/event2", O_RDWR);
   fcntl(homed, 4,2048);

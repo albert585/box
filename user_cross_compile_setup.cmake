@@ -5,7 +5,7 @@
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 
-set(TOOLCHAIN_PREFIX "/usr/arm-unknown-linux-musleabihf" CACHE PATH "Cross-compile toolchain prefix")
+set(TOOLCHAIN_PREFIX "/usr/x-tools/arm-unknown-linux-musleabihf" CACHE PATH "Cross-compile toolchain prefix")
 
 set(CMAKE_C_COMPILER   "${TOOLCHAIN_PREFIX}/bin/arm-unknown-linux-musleabihf-gcc")
 set(CMAKE_CXX_COMPILER "${TOOLCHAIN_PREFIX}/bin/arm-unknown-linux-musleabihf-g++")

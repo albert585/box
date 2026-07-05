@@ -51,8 +51,6 @@ set(EVDEV_LIB_DIR       "${SYSROOT}/evdev/lib")
 set(OPENSSL_INCLUDE_DIR "${SYSROOT}/openssl/include")
 set(OPENSSL_LIB_DIR     "${SYSROOT}/openssl/lib")
 
-message(STATUS "Using sysroot: ${SYSROOT}")
-
 # ============================================================
 # Cross-compile include dirs (must be defined before LVGL subdirectory)
 # ============================================================
@@ -61,6 +59,12 @@ set(CROSS_COMPILE_INCLUDE_DIRS
     ${FFMPEG_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIR}
 )
+
+# ============================================================
+# FFmpeg (6.x only)
+# ============================================================
+message(STATUS "Using sysroot: ${SYSROOT}")
+set(FFMPEG_LIBS -lavcodec -lavutil -lavformat -lswscale -lswresample -lavdevice)
 
 # ============================================================
 # LVGL configuration
@@ -74,59 +78,13 @@ add_subdirectory(lvgl)
 target_include_directories(lvgl PRIVATE ${CROSS_COMPILE_INCLUDE_DIRS})
 
 # ============================================================
-# Third-party UI library
-# ============================================================
-add_subdirectory(src/lib/lv_lib_100ask)
-
-# ============================================================
-# Lua static library
-# ============================================================
-set(LUA_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lapi.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lfunc.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lstate.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lvm.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/ltable.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lstring.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lauxlib.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lbaselib.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lstrlib.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/liolib.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/loslib.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lmathlib.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lutf8lib.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/linit.c
-)
-
-set(LUA_HEADERS
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lua.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lua.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/luaconf.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lualib.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lauxlib.h
-)
-
-add_library(lua STATIC ${LUA_SOURCES})
-
-set_target_properties(lua PROPERTIES
-    VERSION ${PROJECT_VERSION}
-    PUBLIC_HEADER "${LUA_HEADERS}"
-)
-
-target_include_directories(lua PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua
-)
-
-# ============================================================
 # Project include directories
 # ============================================================
 set(PROJECT_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/lib
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/virsual_novel
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lv_lib_100ask
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/views
 )
 
 # ============================================================
@@ -134,23 +92,23 @@ set(PROJECT_INCLUDE_DIRS
 # ============================================================
 file(GLOB PROJECT_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/virsual_novel/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/views/*.c
 )
 file(GLOB PROJECT_HEADERS CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/virsual_novel/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/views/*.h
 )
 
 # ============================================================
-# Target: lvgl_linux (static library)
+# Target: lvgl_linux (shared library)
 # ============================================================
-add_library(lvgl_linux STATIC ${PROJECT_SOURCES})
+add_library(lvgl_linux SHARED ${PROJECT_SOURCES})
 
 set_target_properties(lvgl_linux PROPERTIES
     VERSION ${PROJECT_VERSION}
+    SOVERSION 1
     PUBLIC_HEADER "${PROJECT_HEADERS}"
     LINKER_LANGUAGE C
-    COMPILE_DEFINITIONS "${LVGL_COMPILER_DEFINITIONS}"
 )
 
 target_include_directories(lvgl_linux PRIVATE
@@ -171,14 +129,19 @@ target_include_directories(lvglsim PRIVATE
 # ============================================================
 # Compile options (per-target, no inherited flags overwritten)
 # ============================================================
+set(PROJECT_COMPILE_OPTIONS -Wall -Wextra -Wpedantic -g -mfpu=neon)
+
+target_compile_options(lvgl_linux PRIVATE ${PROJECT_COMPILE_OPTIONS})
+target_compile_options(lvglsim PRIVATE ${PROJECT_COMPILE_OPTIONS})
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "Debug mode (-O0)")
-    target_compile_options(lvgl_linux PRIVATE -Wall -Wextra -Wpedantic -g -O0)
-    target_compile_options(lvglsim PRIVATE -Wall -Wextra -Wpedantic -g -O0)
+    message(STATUS "ARM NEON SIMD optimization enabled (-mfpu=neon), Debug mode (-O0)")
+    target_compile_options(lvgl_linux PRIVATE -O0)
+    target_compile_options(lvglsim PRIVATE -O0)
 else()
-    message(STATUS "Release mode (-O2)")
-    target_compile_options(lvgl_linux PRIVATE -Wall -Wextra -Wpedantic -g -O2)
-    target_compile_options(lvglsim PRIVATE -Wall -Wextra -Wpedantic -g -O2)
+    message(STATUS "ARM NEON SIMD optimization enabled (-mfpu=neon), Release mode (-O2)")
+    target_compile_options(lvgl_linux PRIVATE -O2)
+    target_compile_options(lvglsim PRIVATE -O2)
 endif()
 
 # ============================================================
@@ -195,13 +158,11 @@ target_link_directories(lvglsim PRIVATE
 target_link_libraries(lvglsim
     lvgl_linux
     lvgl
-    lv_lib_100ask
-    lua
     -Wl,-Bstatic
     evdev
     -Wl,-Bdynamic
     ssl crypto
-    -lavcodec -lavutil -lavformat -lswscale -lswresample -lavdevice
+    ${FFMPEG_LIBS}
     asound
     z m pthread dl
 )
@@ -221,7 +182,7 @@ endif()
 # ============================================================
 # Installation rules
 # ============================================================
-install(TARGETS lvgl_linux lua lvglsim
+install(TARGETS lvgl_linux lvglsim
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
