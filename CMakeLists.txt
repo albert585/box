@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 
 # Project configuration
 project(v833_lv9_demos C CXX)
@@ -18,20 +18,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
-# Set compiler flags based on build type
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    # Debug mode: no optimization, keep debug symbols
-    set(CMAKE_C_FLAGS "-Wall -Wextra -Wpedantic -g -O0 -mfpu=neon" CACHE STRING "C compiler flags" FORCE)
-    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -g -O0 -mfpu=neon" CACHE STRING "C++ compiler flags" FORCE)
-else()
-    # Release mode: optimization enabled
-    set(CMAKE_C_FLAGS "-Wall -Wextra -Wpedantic -g -O2 -mfpu=neon" CACHE STRING "C compiler flags" FORCE)
-    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -g -O2 -mfpu=neon" CACHE STRING "C++ compiler flags" FORCE)
-endif()
-
-# ARM NEON SIMD optimization support
-message(STATUS "ARM NEON SIMD optimization enabled (-mfpu=neon)")
-
 # Output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -41,47 +27,59 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 
-# Cross-compilation toolchain paths (for ARM musl toolchain)
-set(CROSS_COMPILE_INCLUDE_DIRS /srv/alsa/include /srv/ffmpeg/include /srv/zlib-armv7/include)
+# ============================================================
+# Dependency sysroot (overridable via -DSYSROOT=... on command line)
+#   Expected layout:
+#     <SYSROOT>/alsa/{include,lib}
+#     <SYSROOT>/ffmpeg/{include,lib}
+#     <SYSROOT>/zlib/{include,lib}
+#     <SYSROOT>/evdev/{include,lib}
+#     <SYSROOT>/openssl/{include,lib}
+# ============================================================
+set(SYSROOT "${CMAKE_SOURCE_DIR}/libs" CACHE PATH
+    "Cross-compile dependency sysroot")
 
-# FFmpeg version selection
-set(FFMPEG_VERSION "6" CACHE STRING "FFmpeg version to use (4 or 6)")
-set_property(CACHE FFMPEG_VERSION PROPERTY STRINGS "4" "6")
+# Per-package paths
+set(ALSA_INCLUDE_DIR    "${SYSROOT}/alsa/include")
+set(ALSA_LIB_DIR        "${SYSROOT}/alsa/lib")
+set(FFMPEG_INCLUDE_DIR  "${SYSROOT}/ffmpeg/include")
+set(FFMPEG_LIB_DIR      "${SYSROOT}/ffmpeg/lib")
+set(ZLIB_INCLUDE_DIR    "${SYSROOT}/zlib/include")
+set(ZLIB_LIB_DIR        "${SYSROOT}/zlib/lib")
+set(EVDEV_INCLUDE_DIR   "${SYSROOT}/evdev/include")
+set(EVDEV_LIB_DIR       "${SYSROOT}/evdev/lib")
+set(OPENSSL_INCLUDE_DIR "${SYSROOT}/openssl/include")
+set(OPENSSL_LIB_DIR     "${SYSROOT}/openssl/lib")
 
-if(FFMPEG_VERSION STREQUAL "4")
-    message(STATUS "Using FFmpeg 4.x (from /srv/ffmpeg-ssd)")
-    set(FFMPEG_INCLUDE_DIR /srv/ffmpeg-ssd/include)
-    set(FFMPEG_LIB_DIR /srv/ffmpeg-ssd/lib)
-    set(FFMPEG_LIBS -lavcodec -lavutil -lavformat -lswscale -lswresample)
-    # FFmpeg 4.x does not have avdevice, enforce ALSA PCM mode
-    add_definitions(-DFFMPEG_VERSION_4)
-    add_definitions(-DLV_FFMPEG_USE_AVDEVICE=0)
-elseif(FFMPEG_VERSION STREQUAL "6")
-    message(STATUS "Using FFmpeg 6.x (from /srv/ffmpeg)")
-    set(FFMPEG_INCLUDE_DIR /srv/ffmpeg/include)
-    set(FFMPEG_LIB_DIR /srv/ffmpeg/lib)
-    set(FFMPEG_LIBS -lavcodec -lavutil -lavformat -lswscale -lswresample -lavdevice)
-else()
-    message(FATAL_ERROR "Invalid FFMPEG_VERSION: ${FFMPEG_VERSION}. Must be '4' or '6'")
-endif()
+# ============================================================
+# Cross-compile include dirs (must be defined before LVGL subdirectory)
+# ============================================================
+set(CROSS_COMPILE_INCLUDE_DIRS
+    ${ALSA_INCLUDE_DIR}
+    ${FFMPEG_INCLUDE_DIR}
+    ${ZLIB_INCLUDE_DIR}
+)
 
-# Update CROSS_COMPILE_INCLUDE_DIRS with selected FFmpeg
-set(CROSS_COMPILE_INCLUDE_DIRS /srv/alsa/include ${FFMPEG_INCLUDE_DIR} /srv/zlib-armv7/include)
+# ============================================================
+# FFmpeg (6.x only)
+# ============================================================
+message(STATUS "Using sysroot: ${SYSROOT}")
+set(FFMPEG_LIBS -lavcodec -lavutil -lavformat -lswscale -lswresample -lavdevice)
 
-# Add cross-compile include directories
-foreach(DIR ${CROSS_COMPILE_INCLUDE_DIRS})
-    include_directories(${DIR})
-endforeach()
-
+# ============================================================
 # LVGL configuration
+# ============================================================
 set(LV_BUILD_CONF_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lv_conf.h CACHE STRING "" FORCE)
 set(LV_BUILD_SET_CONFIG_OPTS ON CACHE BOOL
     "create CMAKE variables from lv_conf_internal.h" FORCE)
-
-# Add LVGL subdirectory
 add_subdirectory(lvgl)
 
+# LVGL needs cross-compile includes for its optional modules (FFmpeg, etc.)
+target_include_directories(lvgl PRIVATE ${CROSS_COMPILE_INCLUDE_DIRS})
+
+# ============================================================
 # Project include directories
+# ============================================================
 set(PROJECT_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -89,56 +87,101 @@ set(PROJECT_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/views
 )
 
-# Project source files (auto-discover all .c files in src/ except main.c)
-file(GLOB PROJECT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.c ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/views/*.c)
+# ============================================================
+# Source files (auto-discover with CONFIGURE_DEPENDS)
+# ============================================================
+file(GLOB PROJECT_SOURCES CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/views/*.c
+)
+file(GLOB PROJECT_HEADERS CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/views/*.h
+)
 
-# Project header files (auto-discover all .h files in src/)
-file(GLOB PROJECT_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.h ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/views/*.h)
-
-# Create lvgl_linux shared library
+# ============================================================
+# Target: lvgl_linux (shared library)
+# ============================================================
 add_library(lvgl_linux SHARED ${PROJECT_SOURCES})
 
-# Set library properties
 set_target_properties(lvgl_linux PROPERTIES
     VERSION ${PROJECT_VERSION}
+    SOVERSION 1
     PUBLIC_HEADER "${PROJECT_HEADERS}"
-)
-
-# Add include directories for lvgl_linux
-target_include_directories(lvgl_linux PUBLIC
-    ${PROJECT_INCLUDE_DIRS}
-)
-
-# Set compile definitions
-set_target_properties(lvgl_linux PROPERTIES
-    COMPILE_DEFINITIONS "${LVGL_COMPILER_DEFINITIONS}"
-)
-
-# Create main executable
-add_executable(lvglsim src/main.c)
-
-# Strip debug symbols from lvglsim after building
-add_custom_command(TARGET lvglsim POST_BUILD
-    COMMAND ${CMAKE_STRIP} --strip-unneeded $<TARGET_FILE:lvglsim>
-    COMMENT "Stripping debug symbols from lvglsim"
-)
-
-# Set executable properties
-set_target_properties(lvgl_linux PROPERTIES
     LINKER_LANGUAGE C
 )
 
-# Add include directories for executable
+target_include_directories(lvgl_linux PRIVATE
+    ${PROJECT_INCLUDE_DIRS}
+    ${CROSS_COMPILE_INCLUDE_DIRS}
+)
+
+# ============================================================
+# Target: lvglsim (executable)
+# ============================================================
+add_executable(lvglsim src/main.c)
+
 target_include_directories(lvglsim PRIVATE
     ${PROJECT_INCLUDE_DIRS}
     ${CROSS_COMPILE_INCLUDE_DIRS}
 )
 
-# Add library directories for linking
-# Link libraries using traditional linker flags
-target_link_libraries(lvglsim lvgl_linux lvgl -L/srv/evdev/lib -L/srv/openssl/lib -L/srv/zlib/lib -L${FFMPEG_LIB_DIR} -L/srv/alsa/lib -Wl,-Bstatic -levdev -Wl,-Bdynamic -lssl -lcrypto ${FFMPEG_LIBS} -lasound -lz -lm -lpthread -ldl)
+# ============================================================
+# Compile options (per-target, no inherited flags overwritten)
+# ============================================================
+set(PROJECT_COMPILE_OPTIONS -Wall -Wextra -Wpedantic -g -mfpu=neon)
 
+target_compile_options(lvgl_linux PRIVATE ${PROJECT_COMPILE_OPTIONS})
+target_compile_options(lvglsim PRIVATE ${PROJECT_COMPILE_OPTIONS})
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "ARM NEON SIMD optimization enabled (-mfpu=neon), Debug mode (-O0)")
+    target_compile_options(lvgl_linux PRIVATE -O0)
+    target_compile_options(lvglsim PRIVATE -O0)
+else()
+    message(STATUS "ARM NEON SIMD optimization enabled (-mfpu=neon), Release mode (-O2)")
+    target_compile_options(lvgl_linux PRIVATE -O2)
+    target_compile_options(lvglsim PRIVATE -O2)
+endif()
+
+# ============================================================
+# Link libraries
+# ============================================================
+target_link_directories(lvglsim PRIVATE
+    ${EVDEV_LIB_DIR}
+    ${OPENSSL_LIB_DIR}
+    ${ZLIB_LIB_DIR}
+    ${FFMPEG_LIB_DIR}
+    ${ALSA_LIB_DIR}
+)
+
+target_link_libraries(lvglsim
+    lvgl_linux
+    lvgl
+    -Wl,-Bstatic
+    evdev
+    -Wl,-Bdynamic
+    ssl crypto
+    ${FFMPEG_LIBS}
+    asound
+    z m pthread dl
+)
+
+# ============================================================
+# Post-build: strip debug symbols (Release only)
+# ============================================================
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_custom_command(TARGET lvglsim POST_BUILD
+        COMMAND ${CMAKE_STRIP} --strip-unneeded $<TARGET_FILE:lvglsim>
+        COMMENT "Stripping debug symbols from lvglsim"
+    )
+else()
+    message(STATUS "Debug mode: skipping post-build strip")
+endif()
+
+# ============================================================
 # Installation rules
+# ============================================================
 install(TARGETS lvgl_linux lvglsim
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
@@ -146,7 +189,9 @@ install(TARGETS lvgl_linux lvglsim
     PUBLIC_HEADER DESTINATION include/v833_lv9_demos
 )
 
+# ============================================================
 # Custom targets
+# ============================================================
 add_custom_target(run
     COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lvglsim
     DEPENDS lvglsim
@@ -161,16 +206,19 @@ add_custom_target(clean-all
     COMMENT "Cleaning all build artifacts"
 )
 
-# Print configuration summary
+# ============================================================
+# Configuration summary
+# ============================================================
 message(STATUS "")
 message(STATUS "==========================================")
 message(STATUS "  V833 LV9 Demos Configuration Summary")
 message(STATUS "==========================================")
-message(STATUS "  Version:        ${PROJECT_VERSION}")
-message(STATUS "  Build Type:     ${CMAKE_BUILD_TYPE}")
-message(STATUS "  C Standard:     ${CMAKE_C_STANDARD}")
-message(STATUS "  C++ Standard:   ${CMAKE_CXX_STANDARD}")
-message(STATUS "  Compiler:       ${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}")
-message(STATUS "  Install Prefix: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "  Version:         ${PROJECT_VERSION}")
+message(STATUS "  Build Type:      ${CMAKE_BUILD_TYPE}")
+message(STATUS "  C Standard:      ${CMAKE_C_STANDARD}")
+message(STATUS "  C++ Standard:    ${CMAKE_CXX_STANDARD}")
+message(STATUS "  Compiler:        ${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}")
+message(STATUS "  Install Prefix:  ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "  Sysroot:         ${SYSROOT}")
 message(STATUS "==========================================")
 message(STATUS "")
