@@ -11,12 +11,9 @@
 #include <string.h>
 #include "lvgl/lvgl.h"
 #include "lvgl/src/drivers/display/fb/lv_linux_fbdev.h"
-#include "lib/file_manager.h"
 #include "lib/container.h"
 #include "lib/button.h"
-#include "lib/settings.h"
 #include "lib/player.h"
-#include "lib/test_button.h"
 #include "main.h"
 
 #define PATH_MAX_LENGTH 256
@@ -116,15 +113,6 @@ void switchBackground(void){
     backgroundTs = custom_tick_get();
     sleepTs    = -1;
 }
-void switchForeground(void)
-{
-    if(backgroundTs == -1) return;
-
-    chdir(homepath);
-    system("chmod 777 switch_foreground");
-    system("sh ./switch_foreground &");
-    //sleep(114514);
-}
 
 void switchRobot(){
     switchBackground();
@@ -135,6 +123,17 @@ void switchRobot(){
     close(powerd);
     system("switch_robot");
 }
+void switchForeground(void)
+{
+    if(backgroundTs == -1) return;
+
+    chdir(homepath);
+    system("chmod 777 switch_foreground");
+    system("sh ./switch_foreground &");
+    //sleep(114514);
+}
+
+
 
 void lcdRefresh(void) {
     int buffer[8] = {0};
@@ -234,8 +233,8 @@ void setDontDeepSleep(bool b){
 int main(int argc, char *argv[])
 {
   bool isDaemonMode = false;
-  system("killall  robotd");
-  system("killall -SIGSTOP robot_run_1");
+  system("killall dlamInit");
+  system("killall ST03_app");
     for (uint32_t i = 0; i < argc; i++)
     {
         char * arg = argv[i];
@@ -280,7 +279,6 @@ int main(int argc, char *argv[])
 
   create_container();
   button();
-  create_test_button();
   //lv_demo_widgets();
 
   while(1) {

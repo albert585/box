@@ -1,9 +1,0 @@
-echo ----kill robot----
-killall -SIGSTOP robotd
-killall -SIGSTOP robot_run_1
-killall lvglsim
-sleep 1
-echo ----run demo----
-chmod 777 lvglsim
-./lvglsim
-echo ----end demo----

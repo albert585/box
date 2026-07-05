@@ -9,7 +9,6 @@ extern "C" {
  *      INCLUDES
  *********************/
 #include "lvgl/lvgl.h"
-#include "lv_lib_100ask/lv_lib_100ask.h"
 #include "ff_player.h"
 #include "views/lv_text_clock.h"
 #include <unistd.h>

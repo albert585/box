@@ -32,15 +32,6 @@ endif()
 # ARM NEON SIMD optimization support
 message(STATUS "ARM NEON SIMD optimization enabled (-mfpu=neon)")
 
-# Eyesee-MPP hardware decoder support
-option(USE_EYEESEE_MPP "Enable Eyesee-MPP hardware video decoder support" ON)
-if(USE_EYEESEE_MPP)
-    message(STATUS "Eyesee-MPP hardware decoder support enabled")
-    add_definitions(-DUSE_EYEESEE_MPP=1)
-else()
-    message(STATUS "Eyesee-MPP hardware decoder support disabled")
-endif()
-
 # Output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -90,60 +81,22 @@ set(LV_BUILD_SET_CONFIG_OPTS ON CACHE BOOL
 # Add LVGL subdirectory
 add_subdirectory(lvgl)
 
-# Add lv_lib_100ask subdirectory
-add_subdirectory(src/lib/lv_lib_100ask)
-
-# Lua library source files
-file(GLOB LUA_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/*.c)
-
-# Lua library header files
-set(LUA_HEADERS
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lua.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lua.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/luaconf.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lualib.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/lauxlib.h
-)
-
-# Create lua static library
-add_library(lua STATIC ${LUA_SOURCES})
-
-# Set library properties
-set_target_properties(lua PROPERTIES
-    VERSION ${PROJECT_VERSION}
-    PUBLIC_HEADER "${LUA_HEADERS}"
-)
-
-# Add include directories for lua
-target_include_directories(lua PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua
-)
-
-# Eyesee-MPP configuration
-set(EYEESEE_MPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/eyesee-mpp CACHE STRING "Eyesee-MPP library directory")
-set(EYEESEE_MPP_LIB_DIR ${EYEESEE_MPP_DIR}/lib/eyesee-mpp CACHE STRING "Eyesee-MPP .so directory")
-set(EYEESEE_MPP_SYSROOT_DIR ${EYEESEE_MPP_DIR}/lib CACHE STRING "Eyesee-MPP sysroot library directory")
-set(EYEESEE_MPP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE STRING "Eyesee-MPP include directory")
-
 # Project include directories
 set(PROJECT_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/lib
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/virsual_novel
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lv_lib_100ask/
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/lua/
-    ${EYEESEE_MPP_INCLUDE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/views
 )
 
 # Project source files (auto-discover all .c files in src/ except main.c)
-file(GLOB PROJECT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.c ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/virsual_novel/*.c ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/views/*.c)
+file(GLOB PROJECT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.c ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/views/*.c)
 
 # Project header files (auto-discover all .h files in src/)
-file(GLOB PROJECT_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.h ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/virsual_novel/*.h ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/views/*.h)
+file(GLOB PROJECT_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.h ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/views/*.h)
 
-# Create lvgl_linux static library
-add_library(lvgl_linux STATIC ${PROJECT_SOURCES})
+# Create lvgl_linux shared library
+add_library(lvgl_linux SHARED ${PROJECT_SOURCES})
 
 # Set library properties
 set_target_properties(lvgl_linux PROPERTIES
@@ -181,27 +134,12 @@ target_include_directories(lvglsim PRIVATE
     ${CROSS_COMPILE_INCLUDE_DIRS}
 )
 
-# Eyesee-MPP libraries (minimal set for video decoding)
-# Core decoder .so files are in eyesee-mpp/lib/eyesee-mpp/
-set(EYEESEE_MPP_LIBS
-    -L${EYEESEE_MPP_LIB_DIR}
-    -Wl,--start-group
-    -lvdecoder
-    -lMemAdapter
-    -lcdc_base
-    -lVE
-    -lvideoengine
-    -lion
-    -llog
-    -Wl,--end-group
-)
-
 # Add library directories for linking
 # Link libraries using traditional linker flags
-target_link_libraries(lvglsim lvgl_linux lvgl lv_lib_100ask lua -L/srv/evdev/lib -L/srv/openssl/lib -L/srv/zlib/lib -L${FFMPEG_LIB_DIR} -L/srv/alsa/lib -L${EYEESEE_MPP_SYSROOT_DIR} -Wl,-rpath-link,${EYEESEE_MPP_SYSROOT_DIR} -Wl,-Bstatic -levdev -Wl,-Bdynamic -lssl -lcrypto ${FFMPEG_LIBS} -lasound -lz -lm -lpthread -ldl ${EYEESEE_MPP_LIBS})
+target_link_libraries(lvglsim lvgl_linux lvgl -L/srv/evdev/lib -L/srv/openssl/lib -L/srv/zlib/lib -L${FFMPEG_LIB_DIR} -L/srv/alsa/lib -Wl,-Bstatic -levdev -Wl,-Bdynamic -lssl -lcrypto ${FFMPEG_LIBS} -lasound -lz -lm -lpthread -ldl)
 
 # Installation rules
-install(TARGETS lvgl_linux lua lvglsim
+install(TARGETS lvgl_linux lvglsim
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
