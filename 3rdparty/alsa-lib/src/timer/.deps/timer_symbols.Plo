@@ -1,0 +1,4 @@
+timer_symbols.lo: timer_symbols.c \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdc-predef.h
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdc-predef.h:

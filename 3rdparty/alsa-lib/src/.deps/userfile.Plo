@@ -1,0 +1,64 @@
+userfile.lo: userfile.c \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdc-predef.h \
+ ../include/config.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/string.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/features.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/alltypes.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/strings.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/errno.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/errno.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/assert.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/sys/types.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/endian.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/lib/gcc/arm-unknown-linux-musleabihf/6.5.0/include/stdint.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdint.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/stdint.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/sys/select.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/unistd.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/posix.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/pwd.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdio.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdlib.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/alloca.h
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdc-predef.h:
+
+../include/config.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/string.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/features.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/alltypes.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/strings.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/errno.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/errno.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/assert.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/sys/types.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/endian.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/lib/gcc/arm-unknown-linux-musleabihf/6.5.0/include/stdint.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdint.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/stdint.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/sys/select.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/unistd.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/posix.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/pwd.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdio.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdlib.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/alloca.h:
