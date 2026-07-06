@@ -211,7 +211,7 @@ add_custom_target(clean-all
 # ============================================================
 message(STATUS "")
 message(STATUS "==========================================")
-message(STATUS "  V833 LV9 Demos Configuration Summary")
+message(STATUS "  V853s LV9 Demos Configuration Summary")
 message(STATUS "==========================================")
 message(STATUS "  Version:         ${PROJECT_VERSION}")
 message(STATUS "  Build Type:      ${CMAKE_BUILD_TYPE}")

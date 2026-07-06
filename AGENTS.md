@@ -93,3 +93,58 @@ Override with `-DSYSROOT=/custom/path`.
 
 - **No tests, no linter, no formatter** configured in this repo
 - `include/cdc_ion_5.4.h` is a vendor-supplied header; not used in the build
+
+## libMb — thermal printer image processing library
+
+**Location**: `/usr/lib/dlam/libMb.so` on device; rootfs copy at `/tmp/rootfs_mnt/usr/lib/dlam/libMb.so`.  
+**Header**: `tools/libMb.h` (reverse-engineered, complete).  
+**Dependencies**: libc, libm, libpthread, libcrypto (transitive).
+
+### Build standalone tools
+
+```bash
+make -C tools           # test_libmb + test_stbi
+# Toolchain: /usr/x-tools/arm-unknown-linux-musleabihf/bin/arm-unknown-linux-musleabihf-gcc
+# Link:    -L/tmp/rootfs_mnt/usr/lib/dlam -Wl,-rpath-link,/tmp/rootfs_mnt/usr/lib
+```
+
+### MbImg struct (20 bytes = 5 × int32)
+
+```c
+typedef struct {
+    uint8_t *data;      // +0x00  pixel buffer (malloc'd, w*h*ch bytes)
+    int      width;     // +0x04
+    int      height;    // +0x08
+    int      channels;  // +0x0c  1=gray, 3=RGB, 4=RGBA
+    int      _reserved; // +0x10  set by CreateImg
+} MbImg;
+```
+
+### Key functions (verified via Ghidra)
+
+| Function | Signature | Notes |
+|----------|-----------|-------|
+| `stbi_load` | `uint8_t*(path, &w, &h, &n, desired)` | Embedded stb_image, loads PNG/JPEG/BMP |
+| `stbi_image_free` | `void(buf)` | Free stbi_load'd buffer |
+| `MMJ_PrinterImgBin` | `int(MbImg*, dither, size, mode)` | **In-place** dither. mode: 0=default, 1=alt. Returns 0=ok |
+| `mbImg2GrayscaleData` | `void(data, w, h, mode, levels, &out_len)` | **In-place** gray→packed. mode: 0/1=gray-input, 2=RGB-input. levels: 8=binary |
+| `Color2Gray` | `int(MbImg*, r1, r2)` | In-place RGB→gray (fills all 3 bytes per pixel) |
+| `Gray2Color` | `int(MbImg*, channels)` | In-place gray→color (expands 1→N bytes per pixel). Buffer must be large enough for output |
+| `CreateImg` | `MbImg*(w, h, ch, extra, init_byte)` | Alloc struct+data, memset with init_byte |
+| `ImgCLAHE` | `void(data, w, h, clip, grid)` | Contrast-limited adaptive histogram equalization |
+| `stbi_write_bmp` | `int(path, w, h, ch, data)` | Save as BMP |
+
+### Known bugs / pitfalls
+
+1. **`FreeImg` is broken** — calls `free(*(int*)pixel_data)` on the first 4 bytes of image data as if they were a heap pointer. Never call it. Use plain `free(img->data); free(img);` instead.
+2. **Struct is 20 bytes**, not 16. Missing the 5th `_reserved` field leads to stack corruption.
+3. **Ghidra first import was incomplete** — the `~Downloads/libMb_*.so` copy showed PLT stubs only. Must import from `rootfs_mnt` for real decompilation.
+4. **Memory on target is tight** (128MB). Each image copy costs `w*h*3` bytes. Free promptly.
+
+### arm-unknown-linux-musleabihf toolchain
+
+- **Compiler**: `/usr/x-tools/arm-unknown-linux-musleabihf/bin/arm-unknown-linux-musleabihf-gcc` (or just `arm-unknown-linux-musleabihf-gcc` from PATH)
+- **strip**: `/usr/x-tools/arm-unknown-linux-musleabihf/bin/arm-unknown-linux-musleabihf-strip`
+- **install dir**: `/usr/x-tools/arm-unknown-linux-musleabihf/`
+- **sysroot**: `${CMAKE_SOURCE_DIR}/libs` or `-DSYSROOT=...`
+- **Link flags for standalone tools**: `-s -Os -mfpu=neon -Wall`
