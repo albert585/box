@@ -9,6 +9,16 @@
 #include "button.h"
 extern lv_obj_t *parent;
 ff_player_t *current_ff_player = NULL;
+void event_btn_test(lv_event_t * e){
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_CLICKED) {
+        lv_obj_t * btn = lv_event_get_target(e);
+        lv_obj_t * label = lv_obj_get_child(btn, 0);
+        lv_label_set_text(label, "OK");
+        printf("Button Clicked\n");
+    }
+}
+
 
 void event_close_ff_player(lv_event_t * e)
 {

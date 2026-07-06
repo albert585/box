@@ -90,7 +90,7 @@ lv_obj_t * page_audio(char * filename)
 
 static void cycle_click(lv_event_t * e)
 {
-    lv_obj_t * btn_cycle_label = (lv_obj_t *) e->user_data;
+    lv_obj_t * btn_cycle_label = (lv_obj_t *) lv_event_get_user_data(e);
     cycle                    = !cycle;
 
     if(cycle) lv_label_set_text(btn_cycle_label, CUSTOM_SYMBOL_CYCLE "");

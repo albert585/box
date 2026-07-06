@@ -207,6 +207,44 @@ add_custom_target(clean-all
 )
 
 # ============================================================
+# Pack target: bundle binary + all .so deps into pack/
+#   pack/lvglsim                       -- main binary
+#   pack/lib/                          -- all shared libraries
+#   pack/run.sh                        -- wrapper: LD_LIBRARY_PATH=$(pwd)/lib ./lvglsim
+# ============================================================
+set(PACK_DIR ${CMAKE_SOURCE_DIR}/pack)
+
+add_custom_target(pack
+    DEPENDS lvglsim
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${PACK_DIR}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${PACK_DIR}/lib
+    # Main binary
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:lvglsim> ${PACK_DIR}/
+    # Our own shared library: liblvgl_linux.so -> liblvgl_linux.so.1 -> liblvgl_linux.so.1.0.0
+    COMMAND cp -a $<TARGET_FILE:lvgl_linux>        ${PACK_DIR}/lib/
+    COMMAND cp -a $<TARGET_SONAME_FILE:lvgl_linux> ${PACK_DIR}/lib/
+    COMMAND ${CMAKE_COMMAND} -E create_symlink liblvgl_linux.so.1 ${PACK_DIR}/lib/liblvgl_linux.so
+    # Dependency .so files from sysroot
+    COMMAND cp -a ${ZLIB_LIB_DIR}/libz.so*        ${PACK_DIR}/lib/
+    COMMAND cp -a ${ALSA_LIB_DIR}/libasound.so*   ${PACK_DIR}/lib/
+    COMMAND cp -a ${OPENSSL_LIB_DIR}/libssl.so*   ${PACK_DIR}/lib/
+    COMMAND cp -a ${OPENSSL_LIB_DIR}/libcrypto.so* ${PACK_DIR}/lib/
+    COMMAND cp -a ${FFMPEG_LIB_DIR}/libavcodec.so* ${PACK_DIR}/lib/
+    COMMAND cp -a ${FFMPEG_LIB_DIR}/libavutil.so*  ${PACK_DIR}/lib/
+    COMMAND cp -a ${FFMPEG_LIB_DIR}/libavformat.so* ${PACK_DIR}/lib/
+    COMMAND cp -a ${FFMPEG_LIB_DIR}/libswscale.so* ${PACK_DIR}/lib/
+    COMMAND cp -a ${FFMPEG_LIB_DIR}/libswresample.so* ${PACK_DIR}/lib/
+    COMMAND cp -a ${FFMPEG_LIB_DIR}/libavdevice.so* ${PACK_DIR}/lib/
+    COMMAND cp -a ${EVDEV_LIB_DIR}/libevdev.so*   ${PACK_DIR}/lib/
+    # Strip debug from .so files (silently skip if already stripped)
+    COMMAND ${CMAKE_STRIP} --strip-unneeded ${PACK_DIR}/lib/*.so.* 2>/dev/null || true
+    # Launch wrapper
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/run.sh.in ${PACK_DIR}/run.sh
+    COMMAND chmod +x ${PACK_DIR}/run.sh
+    COMMENT "Packing deployment files into ${PACK_DIR}"
+)
+
+# ============================================================
 # Configuration summary
 # ============================================================
 message(STATUS "")

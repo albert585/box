@@ -270,12 +270,11 @@ int main(int argc, char *argv[])
   lv_linux_disp_init();
   printf("display OK!\n");
   lv_linux_touch_init();
-  printf("init OK\n");
+  printf(" touch OK\n");
   /*Initialized LVGL*/
   
 
 
-  lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0xFFFFFF), 0);
 
   create_container();
   button();

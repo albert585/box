@@ -642,9 +642,9 @@ static void neon_yuv420p_to_rgb565(uint8_t *yuv, uint8_t *rgb, int width, int he
             /* 展开循环，手动提取每个元素 */
             /* 第一行像素 0-3 */
             for(int i = 0; i < 4; i++) {
-                int16_t y_val = vgetq_lane_s16(y1_val, i);
-                int16_t u = vgetq_lane_s16(u16, i);
-                int16_t v = vgetq_lane_s16(v16, i);
+                int16_t y_val = y1_val[i];
+                int16_t u = u16[i];
+                int16_t v = v16[i];
 
                 /* 颜色转换（YUV 到 RGB） - 使用标量运算 */
                 int16_t r = y_val + (int16_t)(((int32_t)91881 * v) >> 16);
@@ -666,9 +666,9 @@ static void neon_yuv420p_to_rgb565(uint8_t *yuv, uint8_t *rgb, int width, int he
 
             /* 第一行像素 4-7 */
             for(int i = 4; i < 8; i++) {
-                int16_t y_val = vgetq_lane_s16(y1_val, i);
-                int16_t u = vgetq_lane_s16(u16, i - 4);
-                int16_t v = vgetq_lane_s16(v16, i - 4);
+                int16_t y_val = y1_val[i];
+                int16_t u = u16[i - 4];
+                int16_t v = v16[i - 4];
 
                 /* 颜色转换（YUV 到 RGB） - 使用标量运算 */
                 int16_t r = y_val + (int16_t)(((int32_t)91881 * v) >> 16);
@@ -690,9 +690,9 @@ static void neon_yuv420p_to_rgb565(uint8_t *yuv, uint8_t *rgb, int width, int he
 
             /* 第二行像素 0-3 */
             for(int i = 0; i < 4; i++) {
-                int16_t y_val2 = vgetq_lane_s16(y2_val, i);
-                int16_t u = vgetq_lane_s16(u16, i);
-                int16_t v = vgetq_lane_s16(v16, i);
+                int16_t y_val2 = y2_val[i];
+                int16_t u = u16[i];
+                int16_t v = v16[i];
 
                 /* 颜色转换 - 使用标量运算 */
                 int16_t r = y_val2 + (int16_t)(((int32_t)91881 * v) >> 16);
@@ -714,9 +714,9 @@ static void neon_yuv420p_to_rgb565(uint8_t *yuv, uint8_t *rgb, int width, int he
 
             /* 第二行像素 4-7 */
             for(int i = 4; i < 8; i++) {
-                int16_t y_val2 = vgetq_lane_s16(y2_val, i);
-                int16_t u = vgetq_lane_s16(u16, i - 4);
-                int16_t v = vgetq_lane_s16(v16, i - 4);
+                int16_t y_val2 = y2_val[i];
+                int16_t u = u16[i - 4];
+                int16_t v = v16[i - 4];
 
                 /* 颜色转换 - 使用标量运算 */
                 int16_t r = y_val2 + (int16_t)(((int32_t)91881 * v) >> 16);
@@ -818,9 +818,9 @@ static void neon_yuv420p_to_rgb888(uint8_t *yuv, uint8_t *rgb, int width, int he
 
             /* 第一行像素 0-3 */
             for(int i = 0; i < 4; i++) {
-                int16_t y1 = vgetq_lane_s16(y1_val, i);
-                int16_t u = vgetq_lane_s16(u16, i);
-                int16_t v = vgetq_lane_s16(v16, i);
+                int16_t y1 = y1_val[i];
+                int16_t u = u16[i];
+                int16_t v = v16[i];
 
                 /* 第一行：YUV 到 RGB 转换 - 使用标量运算 */
                 int16_t r1 = y1 + (int16_t)(((int32_t)91881 * v) >> 16);
@@ -840,9 +840,9 @@ static void neon_yuv420p_to_rgb888(uint8_t *yuv, uint8_t *rgb, int width, int he
 
             /* 第一行像素 4-7 */
             for(int i = 4; i < 8; i++) {
-                int16_t y1 = vgetq_lane_s16(y1_val, i);
-                int16_t u = vgetq_lane_s16(u16, i - 4);
-                int16_t v = vgetq_lane_s16(v16, i - 4);
+                int16_t y1 = y1_val[i];
+                int16_t u = u16[i - 4];
+                int16_t v = v16[i - 4];
 
                 /* 第一行：YUV 到 RGB 转换 - 使用标量运算 */
                 int16_t r1 = y1 + (int16_t)(((int32_t)91881 * v) >> 16);
@@ -862,9 +862,9 @@ static void neon_yuv420p_to_rgb888(uint8_t *yuv, uint8_t *rgb, int width, int he
 
             /* 第二行像素 0-3 */
             for(int i = 0; i < 4; i++) {
-                int16_t y2 = vgetq_lane_s16(y2_val, i);
-                int16_t u = vgetq_lane_s16(u16, i);
-                int16_t v = vgetq_lane_s16(v16, i);
+                int16_t y2 = y2_val[i];
+                int16_t u = u16[i];
+                int16_t v = v16[i];
 
                 /* 第二行：YUV 到 RGB 转换 - 使用标量运算 */
                 int16_t r2 = y2 + (int16_t)(((int32_t)91881 * v) >> 16);
@@ -884,9 +884,9 @@ static void neon_yuv420p_to_rgb888(uint8_t *yuv, uint8_t *rgb, int width, int he
 
             /* 第二行像素 4-7 */
             for(int i = 4; i < 8; i++) {
-                int16_t y2 = vgetq_lane_s16(y2_val, i);
-                int16_t u = vgetq_lane_s16(u16, i - 4);
-                int16_t v = vgetq_lane_s16(v16, i - 4);
+                int16_t y2 = y2_val[i];
+                int16_t u = u16[i - 4];
+                int16_t v = v16[i - 4];
 
                 /* 第二行：YUV 到 RGB 转换 - 使用标量运算 */
                 int16_t r2 = y2 + (int16_t)(((int32_t)91881 * v) >> 16);
