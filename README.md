@@ -1,5 +1,5 @@
-# v833_lv9_demos
-全志v833主控基于Tina Linux运行LVGL实例
+# Box
+一个使用lvgl实现的小GUI
 
 使用LVGL9.4
 
