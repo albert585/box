@@ -7,7 +7,7 @@
 
 ## 1. 拉取项目：
 ```bash
-git clone --recursive https://github.com/albert585/v833_lv9_demos
+git clone --recursive https://github.com/albert585/box
 ```
 
 ## 2. 编译项目：
