@@ -1,7 +1,7 @@
 # Box
 一个使用lvgl实现的小GUI
 
-使用LVGL9.4
+使用LVGL9
 
 # 使用方法
 
@@ -12,6 +12,8 @@ git clone --recursive https://github.com/albert585/box
 
 ## 2. 编译项目：
 ```bash
+make -C 3rdparty all
+#执行下面的命令前请在user_cross_compile_setup.cmake配置交叉编译工具链
 cmake -DCMAKE_TOOLCHAIN_FILE=./user_cross_compile_setup.cmake -B build -S .
 make -C build -j$(nproc)
 ```
