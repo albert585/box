@@ -2,6 +2,8 @@
 #include "events.h"
 #include "container.h"
 
+lv_obj_t * btn_exit = NULL;
+
 void create_button(lv_event_cb_t  event_cb, const char * text){
     lv_obj_t * button=lv_btn_create(parent);
     lv_obj_set_size(button, 160, 60);

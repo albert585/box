@@ -1,4 +1,6 @@
 
+#include <stdbool.h>
+
 extern void sysSleep(void);
 extern void sysWake(void);
 extern void sysDeepSleep(void);
@@ -10,3 +12,4 @@ extern void lcdOpen(void);
 extern void lcdRefresh(void);
 extern void touchOpen(void);
 extern void touchClose(void);
+extern void setDontDeepSleep(bool b);

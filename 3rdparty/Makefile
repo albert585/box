@@ -24,12 +24,12 @@ JOBS         := $(shell nproc 2>/dev/null || echo 4)
 all: zlib alsa-lib openssl ffmpeg libevdev
 
 # --------------------------------------------------------------------
-# zlib (static only)
+# zlib (shared + static)
 # --------------------------------------------------------------------
 zlib:
 	@echo "=== Building zlib ==="
 	cd zlib && \
-	CC="$(CC)" ./configure --static --prefix=$(LIBS)/zlib
+	CC="$(CC)" CFLAGS="-fPIC" ./configure --shared --prefix=$(LIBS)/zlib
 	+$(MAKE) -C zlib -j$(JOBS)
 	+$(MAKE) -C zlib install
 
@@ -113,7 +113,7 @@ libevdev: zlib
 # --------------------------------------------------------------------
 # Meta targets
 # --------------------------------------------------------------------
-.PHONY: clean clean-all help zlib alsa-lib openssl ffmpeg libevdev
+.PHONY: clean clean-cache clean-all help zlib alsa-lib openssl ffmpeg libevdev
 
 clean:
 	@echo "=== Cleaning all 3rdparty builds ==="
@@ -122,7 +122,13 @@ clean:
 	done
 	rm -rf $(LIBS)/zlib $(LIBS)/alsa $(LIBS)/openssl $(LIBS)/ffmpeg $(LIBS)/evdev
 
-clean-all: clean
+clean-cache:
+	@echo "=== Cleaning build caches ==="
+	find zlib alsa-lib openssl ffmpeg libevdev -type d -name '.deps' -exec rm -rf {} + 2>/dev/null || true
+	find zlib alsa-lib openssl ffmpeg libevdev -type d -name 'autom4te.cache' -exec rm -rf {} + 2>/dev/null || true
+	rm -rf ffmpeg/ffbuild
+
+clean-all: clean clean-cache
 	for d in zlib alsa-lib openssl ffmpeg libevdev; do \
 		rm -f $$d/Makefile $$d/configure; \
 	done
@@ -135,8 +141,9 @@ help:
 	@echo "  make openssl    Build OpenSSL (requires zlib)"
 	@echo "  make ffmpeg     Build FFmpeg (requires zlib, alsa-lib, openssl)"
 	@echo "  make libevdev   Build libevdev (requires zlib)"
-	@echo "  make clean      Remove build artifacts"
-	@echo "  make clean-all  Deep clean (remove generated configure)"
+	@echo "  make clean       Remove build artifacts"
+	@echo "  make clean-cache Remove autotools/cmake caches"
+	@echo "  make clean-all   Deep clean (caches + generated configure)"
 	@echo ""
 	@echo "Toolchain: $(TOOLCHAIN)"
 	@echo "Lib prefix: $(LIBS)"

@@ -10,7 +10,12 @@
 #include <sys/ioctl.h>
 #include <string.h>
 #include "lvgl/lvgl.h"
+#if USE_WAYLAND
+#include "lvgl/src/drivers/wayland/lv_wayland.h"
+#include "lvgl/src/drivers/wayland/lv_wl_window.h"
+#else
 #include "lvgl/src/drivers/display/fb/lv_linux_fbdev.h"
+#endif
 #include "lib/container.h"
 #include "lib/button.h"
 #include "lib/player.h"
@@ -19,10 +24,12 @@
 #define PATH_MAX_LENGTH 256
 char homepath[PATH_MAX_LENGTH] = {0};
 
+#if !USE_WAYLAND
 int disphd  = 0;    
 int fbd = 0;
 int homed  = 0;
 int powerd  = 0;
+#endif
 
 int32_t sleepTs     = -1;
 uint32_t homeClickTs = -1;
@@ -34,8 +41,10 @@ extern uint32_t tick_get(void);
 bool deepSleep  = false;
 bool dontDeepSleep  = false;
 
+#if !USE_WAYLAND
 // CPU频率控制
 static char original_governor[32] = {0};
+#endif
 
 lv_display_t * disp = NULL;
 
@@ -47,23 +56,32 @@ const char *getenv_default(const char *name, const char *default_val)
 
 static void lv_linux_disp_init(void)
 {
+#if USE_WAYLAND
+    disp = lv_wayland_window_create(640, 480, "LVGL Demo", NULL);
+#else
     const char *device = getenv_default("LV_LINUX_FBDEV_DEVICE", "/dev/fb0");
     disp= lv_linux_fbdev_create();
     lv_linux_fbdev_set_file(disp, device);
     lv_display_set_resolution(disp,640,480);
-
+#endif
 }
 
 
 
 static void lv_linux_touch_init(void)
 {
+#if !USE_WAYLAND
     lv_indev_t *touch =lv_evdev_create(LV_INDEV_TYPE_POINTER, "/dev/input/event6");
     lv_indev_set_display(touch, disp);
     //lv_evdev_set_calibration(touch, 20, 860, 220, -120);
     //lv_evdev_set_swap_axes(touch,false);
+#endif
 }
 
+#if USE_WAYLAND
+static void readKeyHome(void) {}
+static void readKeyPower(void) {}
+#else
 void readKeyHome(void) {
         char buffer[16] = {0};
         while (read(homed, buffer, 0x10u) > 0) {
@@ -102,11 +120,15 @@ void readKeyPower(void) {
                 }
         }
 }
+#endif
+
 void sysSleep(void){
         deepSleep = false;
         sleepTs = custom_tick_get();
+#if !USE_WAYLAND
         touchClose();   
         lcdClose();
+#endif
 }
 void switchBackground(void){
     if(backgroundTs != -1) return;
@@ -118,9 +140,11 @@ void switchRobot(){
     switchBackground();
 
     chdir(homepath);
+#if !USE_WAYLAND
     close(disphd);
     close(fbd);
     close(powerd);
+#endif
     system("switch_robot");
 }
 void switchForeground(void)
@@ -134,7 +158,7 @@ void switchForeground(void)
 }
 
 
-
+#if !USE_WAYLAND
 void lcdRefresh(void) {
     int buffer[8] = {0};
         ioctl(fbd, 0x4606u, buffer);
@@ -208,23 +232,35 @@ static void restoreCpuFreq(void) {
         printf("[cpu] No original governor to restore\n");
     }
 }
+#else
+void lcdRefresh(void) {}
+void lcdOpen(void) {}
+void lcdClose(void) {}
+void touchOpen(void) {}
+void touchClose(void) {}
+#endif
+
 void sysDeepSleep(void){
 	deepSleep = true;
     sleepTs   = -1;
+#if !USE_WAYLAND
     // 降低CPU频率到最低，保持浅睡眠逻辑（LCD和触摸屏已关闭）
     setCpuMinFreq();
 
     // 按电源键会醒过来，继续执行下面的代码
+#endif
 }
 
 void sysWake(void){
         deepSleep = false;
         sleepTs = -1;
+#if !USE_WAYLAND
         // 恢复CPU频率
         restoreCpuFreq();
         // 打开触摸屏和LCD
         touchOpen();
         lcdOpen();
+#endif
 }
 void setDontDeepSleep(bool b){
     dontDeepSleep = b;
@@ -233,8 +269,10 @@ void setDontDeepSleep(bool b){
 int main(int argc, char *argv[])
 {
   bool isDaemonMode = false;
+#if !USE_WAYLAND
   system("killall dlamInit");
   system("killall ST03_app");
+#endif
     for (uint32_t i = 0; i < argc; i++)
     {
         char * arg = argv[i];
@@ -244,28 +282,36 @@ int main(int argc, char *argv[])
         }
 
         if(strcmp(arg, "-w") == 0) {
+#if !USE_WAYLAND
             daemon(1, 0);
             switchBackground();
             while(1) {
                 usleep(25000);
                 readKeyHome();
             }
+#else
+            printf("[wayland] watchdog mode not supported\n");
+#endif
         }
     }
 
+#if !USE_WAYLAND
   powerd = open("/dev/input/event0", O_RDWR);
   fcntl(powerd, 4,2048);
   homed = open("/dev/input/event2", O_RDWR);
   fcntl(homed, 4,2048);
   disphd = open("/dev/disp", O_RDWR);
   fbd = open("/dev/fb0" , O_RDWR);
+#endif
   getcwd(homepath, PATH_MAX_LENGTH);
   setenv("TZ", "CST-8", 1);
   tzset();
 
   if(isDaemonMode) daemon(1,0);
 
+#if !USE_WAYLAND
   lcdRefresh();
+#endif
   lv_init();
   lv_linux_disp_init();
   printf("display OK!\n");
@@ -281,10 +327,14 @@ int main(int argc, char *argv[])
   //lv_demo_widgets();
 
   while(1) {
+#if USE_WAYLAND
+        uint32_t time_till_next = lv_wayland_timer_handler();
+        usleep(time_till_next * 1000);
+#else
         readKeyHome();
         if(backgroundTs == -1){
             readKeyPower();
-         	if(sleepTs == -1) {
+          	if(sleepTs == -1) {
             	lv_timer_handler();
 	            usleep(5000);
             }
@@ -301,11 +351,14 @@ int main(int argc, char *argv[])
         else {
             usleep(25000);
         }
+#endif
     }
+#if !USE_WAYLAND
   close(disphd);
   close(powerd);
   close(homed);
   close(fbd);
+#endif
   return 0;
 }
 uint32_t custom_tick_get(void)

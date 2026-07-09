@@ -246,14 +246,14 @@ our %config = (
     ],
     "openssl_sys_defines" => [],
     "openssldir" => "",
-    "options" => "--prefix=/home/albert/Projects/v853_lv9_demos/3rdparty/../libs/openssl --cross-compile-prefix=/usr/x-tools/arm-unknown-linux-musleabihf/bin/arm-unknown-linux-musleabihf- -DOPENSSL_NO_SECURE_MEMORY no-acvp-tests no-apps no-asan no-asm no-brotli no-brotli-dynamic no-buildtest-c++ no-crypto-mdebug no-crypto-mdebug-backtrace no-demos no-devcryptoeng no-docs no-dso no-dynamic-engine no-ec_nistp_64_gcc_128 no-egd no-external-tests no-fips no-fips-jitter no-fips-post no-fips-securitychecks no-fuzz-afl no-fuzz-libfuzzer no-h3demo no-hqinterop no-jitter no-ktls no-loadereng no-md2 no-module no-msan no-pie no-rc5 no-sctp no-ssl3 no-ssl3-method no-sslkeylog no-tests no-tfo no-trace no-ubsan no-unit-test no-uplink no-weak-ssl-ciphers no-winstore no-zlib no-zlib-dynamic no-zstd no-zstd-dynamic",
+    "options" => "--prefix=/home/albert/Projects/box/3rdparty/../libs/openssl --cross-compile-prefix=/usr/x-tools/arm-unknown-linux-musleabihf/bin/arm-unknown-linux-musleabihf- -DOPENSSL_NO_SECURE_MEMORY no-acvp-tests no-apps no-asan no-asm no-brotli no-brotli-dynamic no-buildtest-c++ no-crypto-mdebug no-crypto-mdebug-backtrace no-demos no-devcryptoeng no-docs no-dso no-dynamic-engine no-ec_nistp_64_gcc_128 no-egd no-external-tests no-fips no-fips-jitter no-fips-post no-fips-securitychecks no-fuzz-afl no-fuzz-libfuzzer no-h3demo no-hqinterop no-jitter no-ktls no-loadereng no-md2 no-module no-msan no-pie no-rc5 no-sctp no-ssl3 no-ssl3-method no-sslkeylog no-tests no-tfo no-trace no-ubsan no-unit-test no-uplink no-weak-ssl-ciphers no-winstore no-zlib no-zlib-dynamic no-zstd no-zstd-dynamic",
     "patch" => "7",
     "perl_archname" => "x86_64-linux-thread-multi",
     "perl_cmd" => "/usr/bin/perl",
     "perl_version" => "5.42.2",
     "perlargv" => [
         "linux-generic32",
-        "--prefix=/home/albert/Projects/v853_lv9_demos/3rdparty/../libs/openssl",
+        "--prefix=/home/albert/Projects/box/3rdparty/../libs/openssl",
         "--cross-compile-prefix=/usr/x-tools/arm-unknown-linux-musleabihf/bin/arm-unknown-linux-musleabihf-",
         "no-dso",
         "no-tests",
@@ -287,7 +287,7 @@ our %config = (
         "__CNF_LDFLAGS" => undef,
         "__CNF_LDLIBS" => undef
     },
-    "prefix" => "/home/albert/Projects/v853_lv9_demos/3rdparty/../libs/openssl",
+    "prefix" => "/home/albert/Projects/box/3rdparty/../libs/openssl",
     "prerelease" => "",
     "processor" => "",
     "rc4_int" => "unsigned char",
@@ -27315,8 +27315,8 @@ unless (caller) {
     use File::Copy;
     use Pod::Usage;
 
-    use lib '/home/albert/Projects/v853_lv9_demos/3rdparty/openssl/util/perl';
-    use OpenSSL::fallback '/home/albert/Projects/v853_lv9_demos/3rdparty/openssl/external/perl/MODULES.txt';
+    use lib '/home/albert/Projects/box/3rdparty/openssl/util/perl';
+    use OpenSSL::fallback '/home/albert/Projects/box/3rdparty/openssl/external/perl/MODULES.txt';
 
     my $here = dirname($0);
 
@@ -27343,7 +27343,7 @@ unless (caller) {
             );
 
         use lib '.';
-        use lib '/home/albert/Projects/v853_lv9_demos/3rdparty/openssl/Configurations';
+        use lib '/home/albert/Projects/box/3rdparty/openssl/Configurations';
         use gentemplate;
 
         open my $buildfile_template_fh, ">$buildfile_template"
@@ -27360,8 +27360,8 @@ unless (caller) {
 
         my $prepend = <<'_____';
 use File::Spec::Functions;
-use lib '/home/albert/Projects/v853_lv9_demos/3rdparty/openssl/util/perl';
-use lib '/home/albert/Projects/v853_lv9_demos/3rdparty/openssl/Configurations';
+use lib '/home/albert/Projects/box/3rdparty/openssl/util/perl';
+use lib '/home/albert/Projects/box/3rdparty/openssl/Configurations';
 use lib '.';
 use platform;
 _____

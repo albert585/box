@@ -38,4 +38,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/home/albert/Projects/v853_lv9_demos/3rdparty/../libs/alsa/lib'
+libdir='/home/albert/Projects/box/3rdparty/../libs/alsa/lib'

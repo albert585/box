@@ -1,5 +1,5 @@
 # This file should be used when building against this OpenSSL build, and should never be installed
-prefix=/home/albert/Projects/v853_lv9_demos/3rdparty/openssl
+prefix=/home/albert/Projects/box/3rdparty/openssl
 exec_prefix=${prefix}
 libdir=${exec_prefix}
 includedir=${prefix}/include ${prefix}/./include 

@@ -1,4 +1,4 @@
 #include "lvgl/lvgl.h"
-void button(void);
-lv_obj_t * btn_exit;
+extern void button(void);
+extern lv_obj_t * btn_exit;
 

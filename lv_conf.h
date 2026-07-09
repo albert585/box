@@ -218,7 +218,9 @@
         #define LV_DRAW_SW_CIRCLE_CACHE_SIZE 4
     #endif
 
-    #define  LV_USE_DRAW_SW_ASM     LV_DRAW_SW_ASM_NEON
+    #ifndef LV_USE_DRAW_SW_ASM
+        #define  LV_USE_DRAW_SW_ASM     LV_DRAW_SW_ASM_NEON
+    #endif
 
     #if LV_USE_DRAW_SW_ASM == LV_DRAW_SW_ASM_CUSTOM
         #define  LV_DRAW_SW_ASM_CUSTOM_INCLUDE ""
@@ -1248,7 +1250,9 @@
 #endif
 
 /** Use Wayland to open a window and handle input on Linux or BSD desktops */
-#define LV_USE_WAYLAND          0
+#ifndef LV_USE_WAYLAND
+    #define LV_USE_WAYLAND          0
+#endif
 #if LV_USE_WAYLAND
     #define LV_WAYLAND_BUF_COUNT            1    /**< Use 1 for single buffer with partial render mode or 2 for double buffer with full render mode*/
     #define LV_WAYLAND_USE_DMABUF           0    /**< Use DMA buffers for frame buffers. Requires LV_DRAW_USE_G2D */
@@ -1258,7 +1262,9 @@
 #endif
 
 /** Driver for /dev/fb */
-#define LV_USE_LINUX_FBDEV      1
+#ifndef LV_USE_LINUX_FBDEV
+    #define LV_USE_LINUX_FBDEV      1
+#endif
 #if LV_USE_LINUX_FBDEV
     #define LV_LINUX_FBDEV_BSD           0
     #define LV_LINUX_FBDEV_RENDER_MODE   LV_DISPLAY_RENDER_MODE_PARTIAL
@@ -1334,7 +1340,9 @@
 #endif /*LV_USE_LOVYAN_GFX*/
 
 /** Driver for evdev input devices */
-#define LV_USE_EVDEV    1
+#ifndef LV_USE_EVDEV
+    #define LV_USE_EVDEV    1
+#endif
 
 /** Driver for libinput input devices */
 #define LV_USE_LIBINPUT    0
