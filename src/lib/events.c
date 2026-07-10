@@ -7,6 +7,7 @@
 #include "player.h"
 #include "ff_player.h"
 #include "button.h"
+#include "games/bird.h"
 extern lv_obj_t *parent;
 ff_player_t *current_ff_player = NULL;
 void event_btn_test(lv_event_t * e){
@@ -125,4 +126,13 @@ void page_video(const char *video_file)
     printf("[video] Video playback started\n");
 }
 
+void event_print_test(lv_event_t * e){
+    (void)e;
+    printf("[print] self-test triggered\n");
+    system("echo '{\"cmd\":7}' | nc -U /data/print.server 2>/dev/null &");
+}
 
+void event_open_bird(lv_event_t * e){
+    (void)e;
+    page_bird_create();
+}
