@@ -29,4 +29,5 @@ pack
 .cache
 *.backup
 libs
+reverse
 lvgl_v833_q3
