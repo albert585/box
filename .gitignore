@@ -22,7 +22,7 @@ rad.json
 TestResults.xml
 CMakeFiles
 CMakeCache.txt
-build
+build*
 *.log
 AGENTS.md
 pack
