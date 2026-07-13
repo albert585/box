@@ -11,6 +11,9 @@ set(CMAKE_C_COMPILER   "${TOOLCHAIN_PREFIX}/bin/arm-unknown-linux-musleabihf-gcc
 set(CMAKE_CXX_COMPILER "${TOOLCHAIN_PREFIX}/bin/arm-unknown-linux-musleabihf-g++")
 set(CMAKE_STRIP        "${TOOLCHAIN_PREFIX}/bin/arm-unknown-linux-musleabihf-strip")
 
+set(CMAKE_C_FLAGS_INIT "-mfpu=neon")
+set(CMAKE_CXX_FLAGS_INIT "-mfpu=neon")
+
 # Standard cross-compilation settings: only search sysroot, never host
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)

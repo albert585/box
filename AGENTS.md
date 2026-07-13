@@ -2,13 +2,17 @@
 
 ## Build
 
-**Cross-compilation only.** The binary targets ARM musl Linux (Allwinner V833) and will not run on x86.
+### Cross-compile (v833 / v853)
+
+The binary targets ARM musl Linux (Allwinner V833/V853) and will not run on x86.
 
 ```bash
 # Configure (once or after CMakeLists.txt changes)
 cmake -DCMAKE_TOOLCHAIN_FILE=./user_cross_compile_setup.cmake -B build -S .
 # Debug mode:
 cmake -DCMAKE_TOOLCHAIN_FILE=./user_cross_compile_setup.cmake -DCMAKE_BUILD_TYPE=Debug -B build -S .
+# v853:
+cmake -DCMAKE_TOOLCHAIN_FILE=./user_cross_compile_setup.cmake -DARCH=v853 -B build_v853 -S .
 
 # Build
 make -C build -j$(nproc)
@@ -20,6 +24,18 @@ make -C build -j$(nproc)
 - **Clean rebuild**: `make -C build clean && make -C build -j$(nproc)`
 - **CMake minimum**: 3.12 (required for `CONFIGURE_DEPENDS` in `file(GLOB ...)`)
 - **Custom sysroot**: override via `-DSYSROOT=...` (default: `${CMAKE_SOURCE_DIR}/libs`)
+- **lv_conf**: picked from `config/lv_conf_${ARCH}.h`
+
+### Native build (wayland)
+
+For development/testing on x86 Linux with Wayland display server.
+
+```bash
+cmake -DARCH=wayland -DCMAKE_BUILD_TYPE=Debug -B build_wayland -S .
+make -C build_wayland -j$(nproc)
+```
+
+No toolchain file needed. Dependencies resolved via pkg-config (requires: wayland-client, wayland-cursor, xkbcommon, libavcodec, libavformat, libavutil, libswscale, libswresample, alsa).
 
 ### CLI flags
 

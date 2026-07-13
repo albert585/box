@@ -1,0 +1,70 @@
+shmarea.lo: shmarea.c \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdc-predef.h \
+ ../include/config.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdio.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/features.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/alltypes.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdlib.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/alloca.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/malloc.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/string.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/strings.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/errno.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/errno.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/poll.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/poll.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/sys/mman.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/mman.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/sys/shm.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/sys/ipc.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/ipc.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/ipcstat.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/shm.h \
+ ../include/list.h \
+ /usr/x-tools/arm-unknown-linux-musleabihf/lib/gcc/arm-unknown-linux-musleabihf/6.5.0/include/stddef.h
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdc-predef.h:
+
+../include/config.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdio.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/features.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/alltypes.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/stdlib.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/alloca.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/malloc.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/string.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/strings.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/errno.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/errno.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/poll.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/poll.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/sys/mman.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/mman.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/sys/shm.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/sys/ipc.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/ipc.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/ipcstat.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/arm-unknown-linux-musleabihf/sysroot/usr/include/bits/shm.h:
+
+../include/list.h:
+
+/usr/x-tools/arm-unknown-linux-musleabihf/lib/gcc/arm-unknown-linux-musleabihf/6.5.0/include/stddef.h:
