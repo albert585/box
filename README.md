@@ -11,12 +11,48 @@ git clone --recursive https://github.com/albert585/box
 ```
 
 ## 2. 编译项目：
+
+### 准备第三方库
 ```bash
 make -C 3rdparty all
-#执行下面的命令前请在user_cross_compile_setup.cmake配置交叉编译工具链
-cmake -DCMAKE_TOOLCHAIN_FILE=./user_cross_compile_setup.cmake -B build -S .
+```
+
+### 交叉编译 (v833/v853)
+```bash
+# 默认 Release
+cmake -DCMAKE_TOOLCHAIN_FILE=./user_cross_compile_setup.cmake -DARCH=foo  -B build -S .
+# Debug 模式
+cmake -DCMAKE_TOOLCHAIN_FILE=./user_cross_compile_setup.cmake -DARCH=foo -DCMAKE_BUILD_TYPE=Debug -B build -S .
+#ARCH详情见src/arch,支持v833/v853/wayland(后面还算会改掉的)
+
+
 make -C build -j$(nproc)
 ```
+
+输出二进制：`build/bin/lvglsim`
+
+### cmake 可选参数
+
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| `-DARCH=v833\|v853\|wayland` | 目标架构 | `v833` |
+| `-DCMAKE_BUILD_TYPE=Debug\|Release` | 编译模式 | `Release` |
+| `-DTOOLCHAIN_PREFIX=...` | 交叉编译工具链路径 | `/usr/x-tools/arm-unknown-linux-musleabihf/` |
+| `-DSYSROOT=...` | 第三方库 sysroot | `${CMAKE_SOURCE_DIR}/libs` |
+
+### 本地编译 (Wayland)
+```bash
+cmake -DARCH=wayland -DCMAKE_BUILD_TYPE=Debug -B build_wayland -S .
+make -C build_wayland -j$(nproc)
+```
+依赖：wayland-client, wayland-cursor, xkbcommon, ffmpeg(libav*), alsa
+
+### 运行时参数
+
+| 参数 | 行为 |
+|------|------|
+| `-d` | 后台守护进程模式 |
+| `-w` | 看门狗模式：守护进程化 + 循环读取 home 键 |
 
 # TODO
 
