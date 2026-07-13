@@ -35,7 +35,7 @@ make -C build -j$(nproc)
 
 | 参数 | 说明 | 默认值 |
 |------|------|--------|
-| `-DARCH=v833\|v853\|wayland` | 目标架构 | `v833` |
+| `-DARCH=v833\|v853\|wayland` | 目标架构 | `wayland` |
 | `-DCMAKE_BUILD_TYPE=Debug\|Release` | 编译模式 | `Release` |
 | `-DTOOLCHAIN_PREFIX=...` | 交叉编译工具链路径 | `/usr/x-tools/arm-unknown-linux-musleabihf/` |
 | `-DSYSROOT=...` | 第三方库 sysroot | `${CMAKE_SOURCE_DIR}/libs` |

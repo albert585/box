@@ -1,0 +1,14 @@
+prefix=/home/albert/Projects/box/3rdparty/../libs/ffmpeg
+exec_prefix=${prefix}
+libdir=/home/albert/Projects/box/3rdparty/../libs/ffmpeg/lib
+includedir=/home/albert/Projects/box/3rdparty/../libs/ffmpeg/include
+
+Name: libavfilter
+Description: FFmpeg audio/video filtering library
+Version: 11.14.102
+Requires: 
+Requires.private: libswscale >= 9.5.102, libavutil >= 60.26.102
+Conflicts:
+Libs: -L${libdir}  -lavfilter 
+Libs.private: -pthread -lm -latomic -lz
+Cflags: -I${includedir}

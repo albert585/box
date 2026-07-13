@@ -18,7 +18,7 @@ endif()
 # ============================================================
 # Target chip / build mode
 # ============================================================
-set(ARCH "v833" CACHE STRING "Target architecture: v833, v853, wayland")
+set(ARCH "wayland" CACHE STRING "Target architecture: v833, v853, wayland")
 
 # Output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
