@@ -117,6 +117,7 @@ int main(int argc, char *argv[])
     arch_lcd_refresh();
     lv_init();
     arch_display_init();
+    arch_lcd_open();
     printf("display OK!\n");
     arch_touch_init();
     printf("init OK\n");

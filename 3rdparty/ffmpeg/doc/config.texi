@@ -629,7 +629,7 @@
 @c @set config-amf no
 @c @set config-audiotoolbox no
 @c @set config-cuda no
-@c @set config-cuda-llvm no
+@set config-cuda-llvm yes
 @c @set config-cuvid no
 @c @set config-d3d11va no
 @c @set config-d3d12va no
