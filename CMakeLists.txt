@@ -18,7 +18,7 @@ endif()
 # ============================================================
 # Target chip / build mode
 # ============================================================
-set(ARCH "wayland" CACHE STRING "Target architecture: v833, v853, wayland")
+set(ARCH "wayland" CACHE STRING "Target architecture: v833, v853, v853s, wayland")
 
 # Output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -106,7 +106,12 @@ endif()
 # LVGL configuration (built as shared library liblvgl_linux.so)
 # ============================================================
 set(BUILD_SHARED_LIBS ON)
-set(LV_BUILD_CONF_PATH ${CMAKE_CURRENT_SOURCE_DIR}/config/lv_conf_${ARCH}.h CACHE STRING "" FORCE)
+if(ARCH STREQUAL "v853s")
+    set(LV_CONF_ARCH "v853")
+else()
+    set(LV_CONF_ARCH ${ARCH})
+endif()
+set(LV_BUILD_CONF_PATH ${CMAKE_CURRENT_SOURCE_DIR}/config/lv_conf_${LV_CONF_ARCH}.h CACHE STRING "" FORCE)
 set(LV_BUILD_SET_CONFIG_OPTS ON CACHE BOOL
     "create CMAKE variables from lv_conf_internal.h" FORCE)
 add_subdirectory(lvgl)
@@ -147,11 +152,16 @@ file(GLOB BOX_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/common/games/*.c
 )
 
+if(ARCH STREQUAL "wayland")
+    set(ARCH_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/arch/x86_64/wayland)
+else()
+    set(ARCH_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/arch/armhf/chips/${ARCH})
+endif()
 file(GLOB ARCH_SOURCES CONFIGURE_DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/arch/${ARCH}/*.c
+    ${ARCH_SOURCE_DIR}/*.c
 )
 if(NOT ARCH_SOURCES)
-    message(FATAL_ERROR "No source files found for architecture '${ARCH}' under src/arch/${ARCH}/")
+    message(FATAL_ERROR "No source files found for architecture '${ARCH}' under ${ARCH_SOURCE_DIR}/")
 endif()
 
 # ============================================================

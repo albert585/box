@@ -137,3 +137,7 @@ void event_open_bird(lv_event_t * e){
     (void)e;
     page_bird_create();
 }
+void container_close_cb(lv_event_t *e) {
+    lv_obj_t *container = lv_event_get_user_data(e);
+    lv_obj_del(container);
+}

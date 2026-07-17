@@ -48,7 +48,7 @@ typedef struct
 static lv_obj_t * page_bird_obj(BirdPage * page);
 static void page_bird_destroy(void * p);
 
-static void back_click(lv_event_t * e);
+static void bird_cleanup_cb(void *p);
 static void touch_pressed(lv_event_t * e);
 static void restart_click(lv_event_t * e);
 static void timer_move_tick(lv_timer_t * e);
@@ -73,10 +73,20 @@ BasePage * page_bird_create(void)
 
 static lv_obj_t * page_bird_obj(BirdPage * page)
 {
-    lv_obj_t * screen = lv_obj_create(lv_scr_act());
-    lv_obj_remove_style_all(screen);
+    PageCon pc = {
+        .base = {
+            .object = lv_scr_act(),
+            .width  = SCR_W(),
+            .height = SCR_H(),
+            .scrollbar_mode = LV_SCROLLBAR_MODE_OFF,
+        },
+        .on_delete = bird_cleanup_cb,
+        .user_data = page,
+        .closable  = true,
+    };
+    lv_obj_t *screen = create_page(&pc);
+    lv_obj_set_style_pad_all(screen, 0, 0);
     lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_size(screen, lv_pct(100), lv_pct(100));
 
     lv_obj_t * background = lv_img_create(screen);
     lv_obj_set_size(background, SCR_W(), SCR_H());
@@ -141,8 +151,6 @@ static lv_obj_t * page_bird_obj(BirdPage * page)
     lv_img_set_src(btn_restart, "A:/res/bird/start.png");
     lv_obj_add_event_cb(btn_restart, restart_click, LV_EVENT_CLICKED, page);
     page->btn_restart = btn_restart;
-
-    create_button(60, 40, screen, back_click, "x", page);
 
     game_init(page);
     page->timer_move = lv_timer_create(timer_move_tick, 25, page);
@@ -328,16 +336,13 @@ static bool page_bird_on_key(void * p, key_code_t key_code, key_action_t key_act
     return true;
 }
 
-static void back_click(lv_event_t * e)
+static void bird_cleanup_cb(void *data)
 {
-    BirdPage * page = (BirdPage *)lv_event_get_user_data(e);
-    if(page) {
-        lv_timer_pause(page->timer_move);
-        lv_timer_del(page->timer_move);
-        if(page->base.obj) lv_obj_del(page->base.obj);
-        free(page);
-    }
-    page_back();
+    BirdPage *page = (BirdPage *)data;
+    if (!page) return;
+    lv_timer_pause(page->timer_move);
+    lv_timer_del(page->timer_move);
+    free(page);
 }
 
 static void page_bird_destroy(void * p)

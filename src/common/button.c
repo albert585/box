@@ -21,7 +21,7 @@ void button(void)
     int i;
     Con con = {
         .object = main_page,
-        .width  = 640,
+        .width  = lv_display_get_horizontal_resolution(lv_display_get_default()),
         .height = 60,
         .color  = 0,
         .opa    = LV_OPA_TRANSP,

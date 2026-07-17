@@ -12,7 +12,7 @@ make -C 3rdparty all
 
 Builds zlib, alsa-lib, openssl, ffmpeg, libevdev with the cross-compile toolchain into `libs/`. Individual libs: `make -C 3rdparty <name>` (e.g. `alsa-lib`). Clean: `make -C 3rdparty clean`.
 
-### Cross-compile (v833 / v853)
+### Cross-compile (v833 / v853 / v853s)
 
 The binary targets ARM musl Linux (Allwinner V833/V853) and will not run on x86.
 
@@ -37,7 +37,7 @@ make -C build pack
 - **Post-build strip**: skips in Debug mode. Release builds strip `--strip-unneeded`.
 - **CMake minimum**: 3.12 (required for `CONFIGURE_DEPENDS` in `file(GLOB ...)`)
 - **Custom sysroot**: override via `-DSYSROOT=...` (default: `${CMAKE_SOURCE_DIR}/libs`)
-- **lv_conf**: picked from `config/lv_conf_${ARCH}.h` (v833, v853, wayland)
+- **lv_conf**: picked from `config/lv_conf_${ARCH}.h`. `v853s` reuses `lv_conf_v853.h`.
 - **Pack target**: copies `box` and `liblvgl_linux.so*` to `pack/` for deployment. `pack/run.sh` is generated from `pack/run.sh.in` and handles `LD_LIBRARY_PATH`.
 
 ### Native build (wayland)
@@ -64,7 +64,7 @@ No toolchain file needed. Dependencies resolved via pkg-config (requires: waylan
 
 | Target | Type | Content |
 |--------|------|---------|
-| `box` | executable | `src/main.c` + `src/arch/${ARCH}/*.c` + all `src/common/**/*.c` |
+| `box` | executable | `src/main.c` + arch sources + all `src/common/**/*.c` |
 | `lvgl_linux` | shared lib | LVGL 9.3 submodule (`lvgl/`) |
 
 All application code lives in `box`. `liblvgl_linux.so` only changes when the LVGL submodule is updated.
@@ -72,18 +72,29 @@ All application code lives in `box`. `liblvgl_linux.so` only changes when the LV
 ### Layer overview
 
 ```
-src/main.c             — entry point: LVGL init, evdev input, main loop, power management
-src/arch/${ARCH}/      — platform abstraction (per-arch implementation)
-    device.c           — device init/deinit
-    display.c          — display init, LCD open/close/refresh/brightness
-    input.c            — touch init, key reading (home/power)
-    power.c            — deep sleep, CPU powersave/restore, LCD timeout
-src/common/            — shared application code
-src/main.h             — exports for power/sleep/display functions used by common modules
+src/main.c              — entry point: LVGL init, main loop, power management
+src/arch/
+    arch.h              — platform abstraction (shared declarations)
+    armhf/chips/
+        v833/           — V833 implementation
+        v853/           — V853 implementation
+        v853s/          — V853S (copy of v853, reuses lv_conf_v853.h)
+    x86_64/
+        wayland/        — Wayland native implementation
+src/common/
+    container.c/h       — container/page framework (Con, PageCon)
+    events.c/h          — event handlers, page_video(), container_close_cb()
+    button.c/h          — reusable button widget
+    games/bird.c/h      — Flappy Bird game
+    views/              — custom LVGL widgets (clock, etc.)
+    audio/              — FFmpeg A/V player, ALSA audio
+    battery/            — battery status manager
+    utils/              — string utilities
+src/main.h              — power/sleep/display exports for common modules
 ```
 
-- **`parent`** is the global container object (LVGL screen-sized, 640x480), defined in `src/common/container.c:4`.
-- **Event routing**: `src/common/events.c` — module transition dispatch (e.g. video playback lifecycle via `page_video()`).
+- **`main_page`** is the global root container object, created by `create_main_page()`. Its size is set dynamically from the default LVGL display resolution.
+- **Page framework**: `Con` struct parameterizes container creation. `PageCon` + `create_page()` manages full-page lifecycle (hide main, close button, cleanup callback, restore main on delete).
 
 ### Source auto-discovery
 
@@ -93,23 +104,24 @@ src/main.h             — exports for power/sleep/display functions used by com
 - `src/common/views/*.c`
 - `src/common/audio/*.c`
 - `src/common/battery/*.c`
+- `src/common/games/*.c`
 - `src/common/utils/*.c`
 
-Arch-specific files under `src/arch/${ARCH}/*.c` are also auto-discovered.
+Arch-specific files under `src/arch/armhf/chips/${ARCH}/*.c` or `src/arch/x86_64/wayland/*.c` are also auto-discovered.
 
 ### Key modules
 
 | Module | Files | Purpose |
 |--------|-------|---------|
-| container | `src/common/container.c/h` | Root screen object (`parent`), `page_back()` |
-| events | `src/common/events.c/h` | Button/playback event handlers, `page_video()` |
-| button | `src/common/button.c/h` | Reusable button widget |
+| container | `src/common/container.c/h` | Container system: `Con` (parametrized container), `PageCon` (full-page with lifecycle), `create_container()`, `create_page()`, `create_close_button()`, `page_back()` |
+| events | `src/common/events.c/h` | Button/playback event handlers, `page_video()`, `container_close_cb()` |
+| button | `src/common/button.c/h` | `create_button()` reusable button widget |
 | audio + audio_ctrl | `src/common/audio/audio.c/h`, `audio_ctrl.c/h` | FFmpeg→ALSA PCM playback, hardware volume via ALSA Mixer |
 | ff_player | `src/common/audio/ff_player.c/h` | FFmpeg-based A/V player (software decode, pthreads) |
 | player | `src/common/audio/player.c/h` | UI wrapper around ff_player (video/audio playback lifecycle) |
 | views | `src/common/views/lv_text_clock.c/h` | Custom LVGL text clock widget |
 | battery | `src/common/battery/battery_manager.c/h` | Battery status management |
-| games | `src/common/games/bird.c/h` | Flappy Bird clone (stub) |
+| games | `src/common/games/bird.c/h` | Flappy Bird game |
 | utils | `src/common/utils/str_utils.c/h` | String utility helpers |
 
 ### Platform abstraction (src/arch/)
@@ -122,19 +134,20 @@ Each arch provides these functions (declared in `src/arch/arch.h`):
 | `arch_display_init` | LVGL display driver init |
 | `arch_touch_init/open/close` | Touchscreen input |
 | `arch_lcd_open/close/refresh/set_brightness/get_brightness` | LCD backlight control |
+| `arch_timer_handler` | Per-frame update. Wayland: `lv_wayland_timer_handler()` (returns ms). Embedded: `lv_timer_handler()` + timeout detect (returns 5). |
 | `arch_read_key_home/power` | Hardware key polling |
 | `arch_deep_sleep/cpu_powersave/cpu_restore` | Power management |
 | `arch_lcd_detect_timeout` | Auto-sleep timeout check |
 
-v853 has an additional `ls_printer.c/h` module.
+v853 and v853s have an additional `ls_printer.c/h` module.
 
 ## Hardware / Board specifics
 
-Binary runs **only** on the V833/V853 (Tina Linux). Device nodes hardcoded in per-arch source:
+Binary runs **only** on the V833/V853/V853S (Tina Linux). Device nodes hardcoded in per-arch source:
 
 | Device | Purpose |
 |--------|---------|
-| `/dev/fb0` | Framebuffer display (640x480) |
+| `/dev/fb0` | Framebuffer display (640x480 on v833, 1280x768 on v853) |
 | `/dev/disp` | Display controller ioctl (LCD on/off) |
 | `/dev/input/event0` | Power key (code `0x74`) |
 | `/dev/input/event2` | Home key (code `0x73`, double-click = switch foreground) |
@@ -167,9 +180,10 @@ Build these from source with `make -C 3rdparty all` (requires matching cross-com
 - Config: `config/lv_conf_${ARCH}.h` (set via `LV_BUILD_CONF_PATH`). The root `lv_conf.h` is a reference copy (not used in builds).
 - LVGL 9.x — no `lv_drv_conf.h`; driver config is inline in `lv_conf.h`
 - Uses FBDEV backend (not DRM). Resolution: 640x480 (v833), 1280x768 (v853).
+- Wayland backend uses `lv_wayland_timer_handler()` instead of `lv_timer_handler()`.
 
 ## Other notes
 
 - **No tests, no linter, no formatter** configured in this repo
 - `include/cdc_ion_5.4.h` is a vendor-supplied header; not used in the build
-- `.gitignore` excludes `build*`, `pack`, `libs`, `reverse`, `.cache`, `AGENTS.md`, `*.backup`, and `*.log`
+- `.gitignore` excludes `build*`, `pack`, `libs`, `reverse`, `.cache`, `*.backup`, and `*.log`
