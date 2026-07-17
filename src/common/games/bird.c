@@ -1,4 +1,7 @@
 #include "bird.h"
+#include <string.h>
+#include "container.h"
+#include "button.h"
 
 typedef struct
 {
@@ -35,10 +38,12 @@ typedef struct
 #define GAP_HEIGHT 100
 #define BIRD_X 48
 #define BIRD_Y_INIT 135
-#define TUBE_AX_INIT LV_SCR_WIDTH
-#define TUBE_BX_INIT LV_SCR_WIDTH * 1.5 + TUBE_WIDTH * 0.5
-#define TUBE_RAND_MIN (LV_SCR_HEIGHT - GAP_HEIGHT) * 0.25
-#define TUBE_RAND_MAX (LV_SCR_HEIGHT - GAP_HEIGHT) * 0.75
+#define SCR_W() lv_display_get_horizontal_resolution(lv_display_get_default())
+#define SCR_H() lv_display_get_vertical_resolution(lv_display_get_default())
+#define TUBE_AX_INIT SCR_W()
+#define TUBE_BX_INIT SCR_W() * 1.5 + TUBE_WIDTH * 0.5
+#define TUBE_RAND_MIN (SCR_H() - GAP_HEIGHT) * 0.25
+#define TUBE_RAND_MAX (SCR_H() - GAP_HEIGHT) * 0.75
 
 static lv_obj_t * page_bird_obj(BirdPage * page);
 static void page_bird_destroy(void * p);
@@ -74,42 +79,43 @@ static lv_obj_t * page_bird_obj(BirdPage * page)
     lv_obj_set_size(screen, lv_pct(100), lv_pct(100));
 
     lv_obj_t * background = lv_img_create(screen);
-    lv_obj_set_size(background, LV_SCR_WIDTH, LV_SCR_HEIGHT);
+    lv_obj_set_size(background, SCR_W(), SCR_H());
     lv_obj_set_pos(background, 0, 0);
-    lv_img_set_src(background, "./res/bird/background.png");
+    lv_img_set_src(background, "A:/res/bird/background.png");
+    lv_image_set_inner_align(background, LV_IMAGE_ALIGN_STRETCH);
 
     lv_obj_t * tubeA = lv_img_create(screen);
     lv_obj_set_size(tubeA, TUBE_WIDTH, TUBE_HEIGHT);
-    lv_img_set_src(tubeA, "./res/bird/tube.png");
+    lv_img_set_src(tubeA, "A:/res/bird/tube.png");
     page->tubeA = tubeA;
 
     lv_obj_t * tubeB = lv_img_create(screen);
     lv_obj_set_size(tubeB, TUBE_WIDTH, TUBE_HEIGHT);
-    lv_img_set_src(tubeB, "./res/bird/tube.png");
+    lv_img_set_src(tubeB, "A:/res/bird/tube.png");
     page->tubeB = tubeB;
 
     lv_obj_t * bird = lv_img_create(screen);
     lv_obj_set_size(bird, BIRD_WIDTH, BIRD_HEIGHT);
-    lv_img_set_src(bird, "./res/bird/bird2.png");
+    lv_img_set_src(bird, "A:/res/bird/bird2.png");
     page->bird = bird;
 
     lv_obj_t * img_tap = lv_img_create(screen);
     lv_obj_set_size(img_tap, 120, 98);
     lv_obj_align(img_tap, LV_ALIGN_TOP_MID, 0, lv_pct(42));
-    lv_img_set_src(img_tap, "./res/bird/tap.png");
+    lv_img_set_src(img_tap, "A:/res/bird/tap.png");
     page->img_tap = img_tap;
 
     lv_obj_t * img_over = lv_img_create(screen);
     lv_obj_set_size(img_over, 208, 60);
     lv_obj_align(img_over, LV_ALIGN_TOP_MID, 0, lv_pct(20));
     lv_obj_add_flag(img_over, LV_OBJ_FLAG_HIDDEN);
-    lv_img_set_src(img_over, "./res/bird/over.png");
+    lv_img_set_src(img_over, "A:/res/bird/over.png");
     page->img_over = img_over;
 
     lv_obj_t * img_logo = lv_img_create(screen);
     lv_obj_set_size(img_logo, 178, 48);
     lv_obj_align(img_logo, LV_ALIGN_TOP_MID, 0, lv_pct(16));
-    lv_img_set_src(img_logo, "./res/bird/logo.png");
+    lv_img_set_src(img_logo, "A:/res/bird/logo.png");
     page->img_logo = img_logo;
 
     lv_obj_t * label_score = lv_label_create(screen);
@@ -118,7 +124,7 @@ static lv_obj_t * page_bird_obj(BirdPage * page)
     page->label_score = label_score;
 
     lv_obj_t * touch_area = lv_obj_create(screen);
-    lv_obj_set_size(touch_area, LV_SCR_WIDTH, LV_SCR_HEIGHT);
+    lv_obj_set_size(touch_area, SCR_W(), SCR_H());
     lv_obj_set_pos(touch_area, 0, 0);
     lv_obj_set_style_bg_opa(touch_area, LV_OPA_0, 0);
     lv_obj_set_style_border_opa(touch_area, LV_OPA_0, 0);
@@ -132,18 +138,11 @@ static lv_obj_t * page_bird_obj(BirdPage * page)
     lv_obj_align(btn_restart, LV_ALIGN_TOP_MID, 0, lv_pct(55));
     lv_obj_add_flag(btn_restart, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(btn_restart, LV_OBJ_FLAG_CLICKABLE);
-    lv_img_set_src(btn_restart, "./res/bird/start.png");
+    lv_img_set_src(btn_restart, "A:/res/bird/start.png");
     lv_obj_add_event_cb(btn_restart, restart_click, LV_EVENT_CLICKED, page);
     page->btn_restart = btn_restart;
 
-    lv_obj_t * btn_back = lv_obj_create(screen);
-    lv_obj_set_size(btn_back, lv_pct(100), lv_pct(12));
-    lv_obj_align(btn_back, LV_ALIGN_TOP_LEFT, 0, 0);
-    lv_obj_set_style_bg_opa(btn_back, LV_OPA_0, 0);
-    lv_obj_set_style_border_opa(btn_back, LV_OPA_0, 0);
-    lv_obj_set_style_outline_opa(btn_back, LV_OPA_0, 0);
-    lv_obj_set_style_shadow_opa(btn_back, LV_OPA_0, 0);
-    lv_obj_add_event_cb(btn_back, back_click, LV_EVENT_CLICKED, page);
+    create_button(60, 40, screen, back_click, "x", page);
 
     game_init(page);
     page->timer_move = lv_timer_create(timer_move_tick, 25, page);
@@ -154,7 +153,7 @@ static lv_obj_t * page_bird_obj(BirdPage * page)
 
 static void timer_move_tick(lv_timer_t * t)
 {
-    BirdPage * page = (BirdPage *)t->user_data;
+    BirdPage * page = (BirdPage *)lv_timer_get_user_data(t);
     if(!page) return;
 
     // 下方Y坐标均以屏幕底部为零点
@@ -174,7 +173,7 @@ static void timer_move_tick(lv_timer_t * t)
 
     if(birdSpeed < -15) birdSpeed = -15;
     if(birdY < BIRD_HEIGHT) birdY = BIRD_HEIGHT;
-    if(birdY > LV_SCR_HEIGHT) birdY = LV_SCR_HEIGHT;
+    if(birdY > SCR_H()) birdY = SCR_H();
 
     if(!page->over) {
         tubeAX -= 3;
@@ -182,12 +181,12 @@ static void timer_move_tick(lv_timer_t * t)
     }
 
     if(tubeAX < -TUBE_WIDTH) {
-        tubeAX            = LV_SCR_WIDTH;
+        tubeAX            = SCR_W();
         tubeAY            = rand_between(TUBE_RAND_MIN, TUBE_RAND_MAX);
         page->tubeAScored = false;
     }
     if(tubeBX < -TUBE_WIDTH) {
-        tubeBX            = LV_SCR_WIDTH;
+        tubeBX            = SCR_W();
         tubeBY            = rand_between(TUBE_RAND_MIN, TUBE_RAND_MAX);
         page->tubeBScored = false;
     }
@@ -200,9 +199,9 @@ static void timer_move_tick(lv_timer_t * t)
     page->tubeBX    = tubeBX;
     page->tubeBY    = tubeBY;
 
-    lv_obj_set_pos(bird, BIRD_X, LV_SCR_HEIGHT - birdY);
-    lv_obj_set_pos(tubeA, tubeAX, -TUBE_HEIGHT + LV_SCR_HEIGHT + (TUBE_HEIGHT - GAP_HEIGHT) / 2 - tubeAY);
-    lv_obj_set_pos(tubeB, tubeBX, -TUBE_HEIGHT + LV_SCR_HEIGHT + (TUBE_HEIGHT - GAP_HEIGHT) / 2 - tubeBY);
+    lv_obj_set_pos(bird, BIRD_X, SCR_H() - birdY);
+    lv_obj_set_pos(tubeA, tubeAX, -TUBE_HEIGHT + SCR_H() + (TUBE_HEIGHT - GAP_HEIGHT) / 2 - tubeAY);
+    lv_obj_set_pos(tubeB, tubeBX, -TUBE_HEIGHT + SCR_H() + (TUBE_HEIGHT - GAP_HEIGHT) / 2 - tubeBY);
 
     if(!page->over) {
         if(BIRD_X - TUBE_WIDTH + BIRD_WIDTH_DELTA < tubeAX && tubeAX < BIRD_X + BIRD_WIDTH - BIRD_WIDTH_DELTA) {
@@ -250,7 +249,7 @@ static void game_init(BirdPage * page)
     page->tubeAScored = false;
     page->tubeBScored = false;
 
-    lv_obj_set_pos(page->bird, BIRD_X, LV_SCR_HEIGHT - page->birdY);
+    lv_obj_set_pos(page->bird, BIRD_X, SCR_H() - page->birdY);
     lv_obj_set_pos(page->tubeA, page->tubeAX, page->tubeAY - (TUBE_HEIGHT / 2));
     lv_obj_set_pos(page->tubeB, page->tubeBX, page->tubeBY - (TUBE_HEIGHT / 2));
 
@@ -274,7 +273,7 @@ static void game_stop(BirdPage * page)
 
 static void restart_click(lv_event_t * e)
 {
-    BirdPage * page = (BirdPage *)e->user_data;
+    BirdPage * page = (BirdPage *)lv_event_get_user_data(e);
     if(!page) return;
 
     lv_obj_add_flag(page->img_over, LV_OBJ_FLAG_HIDDEN);
@@ -287,7 +286,7 @@ static void restart_click(lv_event_t * e)
 
 static void touch_pressed(lv_event_t * e)
 {
-    BirdPage * page = (BirdPage *)e->user_data;
+    BirdPage * page = (BirdPage *)lv_event_get_user_data(e);
     if(!page) return;
 
     if(!page->over) {
@@ -331,6 +330,13 @@ static bool page_bird_on_key(void * p, key_code_t key_code, key_action_t key_act
 
 static void back_click(lv_event_t * e)
 {
+    BirdPage * page = (BirdPage *)lv_event_get_user_data(e);
+    if(page) {
+        lv_timer_pause(page->timer_move);
+        lv_timer_del(page->timer_move);
+        if(page->base.obj) lv_obj_del(page->base.obj);
+        free(page);
+    }
     page_back();
 }
 
@@ -341,7 +347,7 @@ static void page_bird_destroy(void * p)
 
     lv_timer_pause(page->timer_move);
     lv_timer_del(page->timer_move);
-    lv_img_cache_invalidate_src(NULL);
+    /* lv_img_cache_invalidate_src removed in LVGL 9.x */
 }
 
 static int rand_between(int start, int end)

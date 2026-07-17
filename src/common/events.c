@@ -8,6 +8,7 @@
 #include "ff_player.h"
 #include "button.h"
 #include "games/bird.h"
+#include "games/bird.h"
 extern lv_obj_t *main_page;
 ff_player_t *current_ff_player = NULL;
 void event_btn_test(lv_event_t * e){

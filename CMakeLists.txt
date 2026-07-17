@@ -144,6 +144,7 @@ file(GLOB BOX_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/common/audio/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/common/battery/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/common/utils/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/common/games/*.c
 )
 
 file(GLOB ARCH_SOURCES CONFIGURE_DEPENDS
