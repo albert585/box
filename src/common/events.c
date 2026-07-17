@@ -7,7 +7,8 @@
 #include "player.h"
 #include "ff_player.h"
 #include "button.h"
-extern lv_obj_t *parent;
+#include "games/bird.h"
+extern lv_obj_t *main_page;
 ff_player_t *current_ff_player = NULL;
 void event_btn_test(lv_event_t * e){
     lv_event_code_t code = lv_event_get_code(e);
@@ -36,7 +37,7 @@ void event_close_ff_player(lv_event_t * e)
         player_destroy(current_ff_player);
         current_ff_player = NULL;
     }
-    lv_obj_clear_flag(parent, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(main_page, LV_OBJ_FLAG_HIDDEN);
 }
 
 void ff_player_finish_callback(ff_player_t *player)
@@ -65,13 +66,13 @@ void page_video(const char *video_file)
     printf("[video] Playing video file: %s\n", video_file);
     
     // 隐藏主界面
-    lv_obj_add_flag(parent, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(main_page, LV_OBJ_FLAG_HIDDEN);
     
     // 创建视频播放器
     current_ff_player = player_create();
     if (!current_ff_player) {
         printf("[video] Failed to create video player\n");
-        lv_obj_clear_flag(parent, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(main_page, LV_OBJ_FLAG_HIDDEN);
         return;
     }
     
@@ -80,7 +81,7 @@ void page_video(const char *video_file)
         printf("[video] Failed to open video file\n");
         player_destroy(current_ff_player);
         current_ff_player = NULL;
-        lv_obj_clear_flag(parent, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(main_page, LV_OBJ_FLAG_HIDDEN);
         return;
     }
     
@@ -89,7 +90,7 @@ void page_video(const char *video_file)
         printf("[video] Failed to initialize audio\n");
         player_destroy(current_ff_player);
         current_ff_player = NULL;
-        lv_obj_clear_flag(parent, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(main_page, LV_OBJ_FLAG_HIDDEN);
         return;
     }
     
@@ -99,7 +100,7 @@ void page_video(const char *video_file)
         printf("[video] Failed to create video display object\n");
         player_destroy(current_ff_player);
         current_ff_player = NULL;
-        lv_obj_clear_flag(parent, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(main_page, LV_OBJ_FLAG_HIDDEN);
         return;
     }
     
@@ -115,7 +116,7 @@ void page_video(const char *video_file)
         lv_obj_del(video_obj);
         player_destroy(current_ff_player);
         current_ff_player = NULL;
-        lv_obj_clear_flag(parent, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(main_page, LV_OBJ_FLAG_HIDDEN);
         return;
     }
     
@@ -133,5 +134,5 @@ void event_print_test(lv_event_t * e){
 
 void event_open_bird(lv_event_t * e){
     (void)e;
-    printf("[bird] game not available\n");
+    page_bird_create();
 }

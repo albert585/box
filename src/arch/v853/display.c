@@ -1,8 +1,10 @@
+#define _GNU_SOURCE
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <pthread.h>
 #include "lvgl/lvgl.h"
 #include "lvgl/src/drivers/display/fb/lv_linux_fbdev.h"
 #include "arch.h"
@@ -12,11 +14,30 @@ extern uint32_t custom_tick_get(void);
 
 static uint32_t lcdBrightness = 25;
 static bool isScreenTimeout = false;
+static volatile int vsync_flag = 0;
 
 static const char *getenv_default(const char *name, const char *default_val)
 {
     const char *value = getenv(name);
     return value ? value : default_val;
+}
+
+static void *vsync_thread_func(void *arg)
+{
+    (void)arg;
+    while (1) {
+        while (!vsync_flag) usleep(5000);
+        vsync_flag = 0;
+        int buf[8] = {0};
+        ioctl(fbd, 0x4606u, buf);
+    }
+    return NULL;
+}
+
+static void on_flush_finish(lv_event_t *e)
+{
+    (void)e;
+    vsync_flag = 1;
 }
 
 void arch_display_init(void)
@@ -25,6 +46,8 @@ void arch_display_init(void)
     disp = lv_linux_fbdev_create();
     lv_linux_fbdev_set_file(disp, device);
     lv_display_set_resolution(disp, 1280, 768);
+    lv_display_add_event_cb(disp, on_flush_finish, LV_EVENT_FLUSH_FINISH, NULL);
+    pthread_create(&(pthread_t){0}, NULL, vsync_thread_func, NULL);
 }
 
 void arch_touch_init(void)
@@ -112,4 +135,11 @@ void arch_touch_close(void)
     write(tpd, "0", 1u);
     close(tpd);
     printf("[tp]closed\n");
+}
+
+uint32_t arch_timer_handler(void)
+{
+    lv_timer_handler();
+    arch_lcd_detect_timeout();
+    return 5;
 }

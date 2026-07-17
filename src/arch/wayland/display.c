@@ -1,9 +1,16 @@
 #include <stddef.h>
+#include "lvgl/lvgl.h"
+#include "lvgl/src/drivers/wayland/lv_wayland.h"
 #include "arch.h"
 
 void arch_display_init(void)
 {
     disp = lv_wayland_window_create(640, 480, "LVGL Demo", NULL);
+}
+
+uint32_t arch_timer_handler(void)
+{
+    return lv_wayland_timer_handler();
 }
 
 void arch_touch_init(void) {}

@@ -52,6 +52,13 @@ void arch_lcd_set_brightness(int brightness) {}
 uint32_t arch_lcd_get_brightness(void) { return 25; }
 void arch_lcd_detect_timeout(void) {}
 
+uint32_t arch_timer_handler(void)
+{
+    lv_timer_handler();
+    arch_lcd_detect_timeout();
+    return 5;
+}
+
 void arch_touch_open(void)
 {
     int tpd = open("/proc/sprocomm_tpInfo", 526338);

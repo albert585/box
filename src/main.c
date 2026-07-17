@@ -118,12 +118,11 @@ int main(int argc, char *argv[])
     lv_init();
     arch_display_init();
     arch_lcd_open();
-    printf("display OK!\n");
+    LV_LOG_INFO("display OK!\n");
     arch_touch_init();
-    printf("init OK\n");
+    LV_LOG_INFO("init OK\n");
 
-    lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0xFFFFFF), 0);
-    create_container();
+    create_main_page();
     button();
 
     while(1) {
@@ -131,9 +130,8 @@ int main(int argc, char *argv[])
         if(backgroundTs == -1) {
             arch_read_key_power();
             if(sleepTs == -1) {
-                lv_timer_handler();
-                arch_lcd_detect_timeout();
-                usleep(5000);
+            uint32_t delay = arch_timer_handler();
+            usleep(delay * 1000);
             } else {
                 if(dontDeepSleepEnabled)
                     sleepTs = tick_get();

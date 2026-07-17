@@ -103,14 +103,16 @@ else()
 endif()
 
 # ============================================================
-# LVGL configuration
+# LVGL configuration (built as shared library liblvgl_linux.so)
 # ============================================================
+set(BUILD_SHARED_LIBS ON)
 set(LV_BUILD_CONF_PATH ${CMAKE_CURRENT_SOURCE_DIR}/config/lv_conf_${ARCH}.h CACHE STRING "" FORCE)
 set(LV_BUILD_SET_CONFIG_OPTS ON CACHE BOOL
     "create CMAKE variables from lv_conf_internal.h" FORCE)
 add_subdirectory(lvgl)
 
-# LVGL needs include dirs for its optional modules
+set_target_properties(lvgl PROPERTIES OUTPUT_NAME lvgl_linux)
+
 target_include_directories(lvgl PRIVATE ${DEP_INCLUDE_DIRS})
 
 if(ARCH STREQUAL "wayland")
@@ -136,7 +138,7 @@ set(PROJECT_INCLUDE_DIRS
 # ============================================================
 # Source files (auto-discover with CONFIGURE_DEPENDS)
 # ============================================================
-file(GLOB PROJECT_SOURCES CONFIGURE_DEPENDS
+file(GLOB BOX_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/common/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/common/views/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/common/audio/*.c
@@ -144,35 +146,19 @@ file(GLOB PROJECT_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/common/utils/*.c
 )
 
-# ============================================================
-# Target: lvgl_linux (shared library)
-# ============================================================
-add_library(lvgl_linux SHARED ${PROJECT_SOURCES})
-
-set_target_properties(lvgl_linux PROPERTIES
-    VERSION ${PROJECT_VERSION}
-    SOVERSION 1
-)
-
-target_include_directories(lvgl_linux PRIVATE
-    ${PROJECT_INCLUDE_DIRS}
-    ${DEP_INCLUDE_DIRS}
-)
-
-# ============================================================
-# Target: lvglsim (executable)
-# ============================================================
-add_executable(lvglsim src/main.c)
-
 file(GLOB ARCH_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/arch/${ARCH}/*.c
 )
 if(NOT ARCH_SOURCES)
     message(FATAL_ERROR "No source files found for architecture '${ARCH}' under src/arch/${ARCH}/")
 endif()
-target_sources(lvglsim PRIVATE ${ARCH_SOURCES})
 
-target_include_directories(lvglsim PRIVATE
+# ============================================================
+# Target: box (executable) — all src/ code goes here
+# ============================================================
+add_executable(box src/main.c ${BOX_SOURCES} ${ARCH_SOURCES})
+
+target_include_directories(box PRIVATE
     ${PROJECT_INCLUDE_DIRS}
     ${DEP_INCLUDE_DIRS}
 )
@@ -188,26 +174,23 @@ else()
     set(PROJECT_COMPILE_OPTIONS -Wall -Wextra -Wpedantic -g)
 endif()
 
-target_compile_options(lvgl_linux PRIVATE ${PROJECT_COMPILE_OPTIONS})
-target_compile_options(lvglsim PRIVATE ${PROJECT_COMPILE_OPTIONS})
+target_compile_options(box PRIVATE ${PROJECT_COMPILE_OPTIONS})
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Debug mode: -O0")
-    target_compile_options(lvgl_linux PRIVATE -O0)
-    target_compile_options(lvglsim PRIVATE -O0)
+    target_compile_options(box PRIVATE -O0)
 else()
     message(STATUS "Release mode: -O2")
-    target_compile_options(lvgl_linux PRIVATE -O2)
-    target_compile_options(lvglsim PRIVATE -O2)
+    target_compile_options(box PRIVATE -O2)
 endif()
 
 # ============================================================
 # Link libraries
 # ============================================================
 if(ARCH STREQUAL "wayland")
-    target_link_libraries(lvglsim lvgl_linux lvgl ${DEP_LIBS})
+    target_link_libraries(box lvgl ${DEP_LIBS})
 else()
-    target_link_directories(lvglsim PRIVATE
+    target_link_directories(box PRIVATE
         ${EVDEV_LIB_DIR}
         ${OPENSSL_LIB_DIR}
         ${ZLIB_LIB_DIR}
@@ -216,16 +199,16 @@ else()
     )
 
     find_library(EVDEV_LIB evdev PATHS ${EVDEV_LIB_DIR} NO_DEFAULT_PATH REQUIRED)
-    target_link_libraries(lvglsim lvgl_linux lvgl ${EVDEV_LIB} ${DEP_LIBS})
+    target_link_libraries(box lvgl ${EVDEV_LIB} ${DEP_LIBS})
 endif()
 
 # ============================================================
 # Post-build: strip debug symbols (Release only)
 # ============================================================
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_custom_command(TARGET lvglsim POST_BUILD
-        COMMAND ${CMAKE_STRIP} --strip-unneeded $<TARGET_FILE:lvglsim>
-        COMMENT "Stripping debug symbols from lvglsim"
+    add_custom_command(TARGET box POST_BUILD
+        COMMAND ${CMAKE_STRIP} --strip-unneeded $<TARGET_FILE:box>
+        COMMENT "Stripping debug symbols from box"
     )
 else()
     message(STATUS "Debug mode: skipping post-build strip")
@@ -234,7 +217,7 @@ endif()
 # ============================================================
 # Installation rules
 # ============================================================
-install(TARGETS lvgl_linux lvglsim
+install(TARGETS lvgl box
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
@@ -244,12 +227,15 @@ install(TARGETS lvgl_linux lvglsim
 # pack target: copy built artifacts to pack/ for deployment
 # ============================================================
 if(NOT ARCH STREQUAL "wayland")
+    set(PROJECT_EXECUTABLE "box")
+    configure_file(${CMAKE_SOURCE_DIR}/pack/run.sh.in ${CMAKE_SOURCE_DIR}/pack/run.sh @ONLY)
+
     add_custom_target(pack
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:lvglsim> ${CMAKE_SOURCE_DIR}/pack/lvglsim
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:lvgl_linux> ${CMAKE_SOURCE_DIR}/pack/lib/
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:lvgl_linux> ${CMAKE_SOURCE_DIR}/pack/lib/
-        COMMENT "Packing lvglsim and liblvgl_linux.so to pack/"
-        DEPENDS lvglsim lvgl_linux
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:box> ${CMAKE_SOURCE_DIR}/pack/box
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:lvgl> ${CMAKE_SOURCE_DIR}/pack/lib/
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:lvgl> ${CMAKE_SOURCE_DIR}/pack/lib/
+        COMMENT "Packing box and liblvgl_linux.so to pack/"
+        DEPENDS box lvgl
     )
 endif()
 

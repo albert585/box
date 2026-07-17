@@ -46,4 +46,6 @@ void arch_cpu_restore(void);
 
 void arch_lcd_detect_timeout(void);
 
+uint32_t arch_timer_handler(void);
+
 #endif
